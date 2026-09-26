@@ -34,10 +34,7 @@
           <span class="icon"><i class="fas fa-code"></i></span><span>Code</span>
         </a>
         <a href="https://osf.io/vyr3c/?view_only=4c5fd2f7aae1440e8de3e0bebece4648" class="button is-rounded is-dark">
-          <span class="icon"><i class="fas fa-database"></i></span><span>Data</span>
-        </a>
-        <a href="#start" class="button is-rounded is-dark">
-          <span class="icon"><i class="fas fa-download"></i></span><span>Load the data</span>
+          <span class="icon"><i class="fas fa-database"></i></span><span>Dataset</span>
         </a>
         <a href="#explorer" class="button is-rounded is-dark">
           <span class="icon"><i class="fas fa-cube"></i></span><span>Dataset explorer</span>
@@ -210,8 +207,11 @@
 <section class="section" id="start">
   <div class="container is-max-desktop">
     <h2 class="title is-3"><span class="icon"><i class="fas fa-download"></i></span>Load the Data</h2>
-    <p class="subtitle is-6">Every shell is one <code>.npz</code> file on the shared mesh, so it is read with NumPy alone. The
-    benchmark code wraps this in the <code>bliss</code> package, with the three protocols and the scorer.</p>
+    <p class="subtitle is-6">One command of the code repository downloads the review sample. Every shell is one
+    <code>.npz</code> file on the shared mesh, so it is read with NumPy alone, and the <code>bliss</code> package adds the
+    three protocols and the scorer.</p>
+    <pre><code># download the review sample (290 MB) into BLISS-1.0/, check its SHA-256 and link it for the scripts
+python benchmark/data/download.py</code></pre>
     <div class="columns">
       <div class="column">
         <pre><code># one shell with NumPy
