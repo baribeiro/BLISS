@@ -199,3 +199,4 @@ table#cat-table tbody tr.sel { background: #e8eef5; }
 table#defect-table { font-size: 0.78rem; margin-top: 0.3rem; }
 .button[disabled] { opacity: 0.35; }
 @media (max-width: 768px) { .ds-cards { grid-template-columns: 1fr 1fr; } }
+table#lb tbody tr { cursor: pointer; } table#lb tbody tr.sel td { background: #e8eef5; }

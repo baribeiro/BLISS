@@ -276,7 +276,7 @@ function drawLeaderboard(p) {
   const flush = () => {
     if (LB_SORT.col >= 0) rows.sort((a, b) => { const x = numOf(a[1][LB_SORT.col]), y = numOf(b[1][LB_SORT.col]);
       if (x === null) return 1; if (y === null) return -1; return LB_SORT.dir * (x - y); });
-    for (const [name, r] of rows) h += "<tr><td class='l'>" + name + "</td>" + r.map(c => { const best = c.endsWith("*");
+    for (const [name, r] of rows) h += "<tr data-m='" + name + "'" + (RANK.model && modelOf(name) === RANK.model ? " class='sel'" : "") + "><td class='l'>" + name + "</td>" + r.map(c => { const best = c.endsWith("*");
       return "<td" + (best ? " class='best'" : "") + ">" + (best ? c.slice(0, -1) : c) + "</td>"; }).join("") + "</tr>";
     rows = [];
   };
@@ -288,6 +288,7 @@ function drawLeaderboard(p) {
   $("lb").innerHTML = h + "</tbody>";
   $("lb").querySelectorAll("th.sortable").forEach(th => th.addEventListener("click", () => {
     const c = +th.dataset.c; LB_SORT = { col: c, dir: LB_SORT.col === c ? -LB_SORT.dir : -1 }; drawLeaderboard(LB_P); }));
+  $("lb").querySelectorAll("tbody tr[data-m]").forEach(tr => tr.addEventListener("click", () => selectModel(tr.dataset.m)));
 }
 
 const FULL_HEAD = { kappa_mre: "MRE κ [%]", kappa_r2: "κ R²", unconservative: "unconserv.", buckling_r2: "buckling R²",
@@ -330,7 +331,7 @@ function drawRank() {
   render("plot-rank", tr, baseLayout({ xaxis: axis(xl, { type: m === "kappa_mre" ? "log" : "linear" }),
     yaxis: axis("", { automargin: true, tickfont: { size: 11, color: T.ink3 } }), margin: { l: 10, r: 16, t: 10, b: 48 } }));
   const el = $("plot-rank");
-  if (!el._bound) { el._bound = true; el.on("plotly_click", ev => { RANK.model = ev.points[0].customdata; drawRank(); drawModelCard(); }); }
+  if (!el._bound) { el._bound = true; el.on("plotly_click", ev => { RANK.model = ev.points[0].customdata; drawRank(); drawModelCard(); drawLeaderboard(LB_P); drawLadder(); }); }
 }
 function drawModelCard() {
   const n = RANK.model; if (!n || !FULL) { $("model-card").innerHTML = "<p class='how'>Click a model in the ranking.</p>"; return; }
@@ -349,6 +350,19 @@ function drawModelCard() {
     " on B3" + (b3 < 0.34 ? ", below the training mean (0.340)." : ".") + "</p>";
   $("model-card").innerHTML = h;
 }
+function modelOf(shortName) {
+  // the full-table row of a Table 2 row name
+  if (!FULL) return null;
+  const rows = FULL.protocols.B1, base = shortName.replace(/ [\u2020\u2217\u2021]$/, "").trim();
+  if (base.startsWith("SFNO-64")) { const r = rows.find(x => x.name.startsWith("SFNO-64")); return r ? r.name : null; }
+  const r = rows.find(x => x.name === base) || rows.find(x => x.name.split(" (")[0] === base) ||
+    rows.find(x => x.name.toLowerCase().startsWith(base.toLowerCase()));
+  return r ? r.name : null;
+}
+function selectModel(shortName) {
+  const m = modelOf(shortName); if (!m) return;
+  RANK.model = m; drawRank(); drawModelCard(); drawLeaderboard(LB_P); drawLadder();
+}
 function initRank() {
   document.querySelectorAll("#rank-metric .button").forEach(b => b.addEventListener("click", () => { selectButton("rank-metric", b); RANK.metric = b.dataset.m; drawRank(); }));
   RANK.model = FULL.protocols.B1[0].name; drawRank(); drawModelCard();
@@ -365,9 +379,11 @@ function drawLadder() {
   const pct = (m === "clear_site" || m === "near_tie") ? 100 : 1;
   const val = (p, name) => { const r = FULL.protocols[p].find(x => x.name.split(" (")[0] === name); const c = r && r.cells[m];
     return (c && typeof c !== "string") ? c[0] * pct : null; };
+  const selShort = RANK.model ? RANK.model.split(" (")[0] : null;
   const tr = ladderNames().filter(n => !LADDER.hidden.has(n)).map(n => ({ type: "scatter", mode: "lines+markers", name: n, x: X,
-    y: P.map(p => val(p, n)), line: { width: 3, color: MODEL_COL[n.replace("SFNO-64×128", "SFNO-64x128").replace("$", "")] || PAPER.greyDark },
-    marker: { size: 9 }, hovertemplate: n + ": %{y:.3f}<extra></extra>" }));
+    y: P.map(p => val(p, n)), opacity: (!selShort || selShort === n || !ladderNames().includes(selShort)) ? 1 : 0.25,
+    line: { width: selShort === n ? 6 : 3, color: MODEL_COL[n.replace("SFNO-64×128", "SFNO-64x128").replace("$", "")] || PAPER.greyDark },
+    marker: { size: selShort === n ? 13 : 9 }, hovertemplate: n + ": %{y:.3f}<extra></extra>" }));
   tr.push({ type: "scatter", mode: "lines", name: "training mean", x: X, y: P.map(p => val(p, "training mean")),
     line: { dash: "dash", color: PAPER.greyDark, width: 2 }, hovertemplate: "training mean: %{y:.3f}<extra></extra>" });
   const ylab = { buckling_r2: "buckling R²", kappa_mre: "median relative error of κ [%]",
