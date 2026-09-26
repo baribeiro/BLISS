@@ -1,0 +1,32 @@
+:root { --navy: #1c2b4a; --navy2: #294366; --red: #b02c27; --ink: #1f2430; --muted: #5b6475; --paper: #ffffff; --soft: #f4f6f9; }
+body { background: var(--paper); color: var(--ink); font-family: "Source Sans Pro", "Helvetica Neue", Arial, sans-serif; }
+.bliss-hero { background: var(--navy); color: #fff; }
+.bliss-hero .title, .bliss-hero .subtitle { color: #fff; }
+.bliss-logo { width: 360px; max-width: 80%; margin: 0.5rem auto 1rem; display: block; }
+.publication-title { max-width: 900px; margin: 0 auto 0.5rem; line-height: 1.25; }
+.anon { opacity: 0.8; margin-top: 0.5rem !important; }
+.link-buttons { margin-top: 1.2rem; }
+.link-buttons .button.is-dark { background: var(--navy2); border: 1px solid rgba(255,255,255,0.25); }
+.link-buttons .button.is-dark:hover { background: var(--red); }
+.section { padding: 2.2rem 1.5rem; }
+.section:nth-of-type(even) { background: var(--soft); }
+h2.title { color: var(--navy); border-bottom: 3px solid var(--red); display: inline-block; padding-bottom: 0.2rem; }
+h3.title { color: var(--navy2); margin-top: 1.2rem; }
+.tagline { font-size: 1.25rem; text-align: center; color: var(--navy); font-weight: 600; margin-bottom: 1.2rem; }
+.hl { height: 100%; border-top: 4px solid var(--navy); }
+.hl-num { font-size: 2rem; font-weight: 700; color: var(--red); line-height: 1.1; margin-bottom: 0.3rem; }
+.ds-panels img { width: 100%; }
+.table td, .table th { font-variant-numeric: tabular-nums; }
+tr.total td { font-weight: 700; border-top: 2px solid var(--navy); }
+.plot { width: 100%; height: 380px; }
+.kappa-readout { text-align: center; font-weight: 600; color: var(--navy); font-size: 1.1rem; }
+.slider { width: 100%; accent-color: var(--red); }
+pre { background: #0f1726; color: #e6e9ef; border-radius: 6px; }
+table.lb th { color: var(--navy); white-space: nowrap; }
+table.lb td:first-child { white-space: nowrap; }
+table.lb tr.group td { background: var(--soft); font-style: italic; color: var(--muted); }
+table.lb td.best { font-weight: 700; color: var(--red); }
+figcaption { font-size: 0.9rem; color: var(--muted); margin-top: 0.3rem; }
+.tabs.is-toggle li.is-active a { background: var(--navy); border-color: var(--navy); }
+#lb-tabs .button.is-dark { background: var(--navy); }
+@media (max-width: 768px) { .plot { height: 300px; } .publication-title { font-size: 1.5rem !important; } }

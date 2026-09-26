@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BLISS: A Dataset and Benchmark for the Buckling of Imperfect Spherical Shells</title>
+  <meta name="description" content="BLISS is a dataset and benchmark of 8,528 imperfect hemispherical shells simulated with finite elements until collapse, in which an instability creates the distribution shift.">
+  <link rel="icon" href="static/images/logo.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="static/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+</head>
+<body>
+
+<section class="hero bliss-hero">
+  <div class="hero-body">
+    <div class="container has-text-centered">
+      <img src="static/images/logo.png" alt="BLISS" class="bliss-logo">
+      <h1 class="title is-2 publication-title">A Dataset and Benchmark for the Buckling of Imperfect Spherical Shells</h1>
+      <p class="subtitle is-6 anon">Anonymous authors &middot; under double-blind review</p>
+      <div class="buttons is-centered link-buttons">
+        <a class="button is-dark is-rounded" href="#abstract"><span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper (under review)</span></a>
+        <a class="button is-dark is-rounded" href="https://osf.io/vyr3c/?view_only=4c5fd2f7aae1440e8de3e0bebece4648"><span class="icon"><i class="fas fa-database"></i></span><span>Data (review subset)</span></a>
+        <a class="button is-dark is-rounded" href="#resources"><span class="icon"><i class="fab fa-github"></i></span><span>Code</span></a>
+        <a class="button is-dark is-rounded" href="#leaderboard"><span class="icon"><i class="fas fa-trophy"></i></span><span>Leaderboard</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <p class="tagline">A small change in geometry, two defects moving close enough to interact, changes how a thin shell collapses.
+    BLISS measures whether a surrogate model sees it.</p>
+    <figure class="image"><img src="static/images/overview.png" alt="Overview of BLISS"></figure>
+  </div>
+</section>
+
+<section class="section" id="highlights">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Paper Highlights</h2>
+    <div class="columns is-multiline">
+      <div class="column is-half"><div class="box hl"><p class="hl-num">8,528</p><p>imperfect hemispherical shells simulated with finite elements until collapse</p></div></div>
+      <div class="column is-half"><div class="box hl"><p class="hl-num">0.985</p><p>field R&sup2; of the best model within distribution (B1), with 98% of clear failure sites found</p></div></div>
+      <div class="column is-half"><div class="box hl"><p class="hl-num">&lt; mean</p><p>from sparse to dense shells (B3), every model that reads the geometry scores below the average training shell on the field</p></div></div>
+      <div class="column is-half"><div class="box hl"><p class="hl-num">&minus;14%</p><p>median drop of the collapse load when one pair of defects moves from 25&deg; to 10&deg;, which the models miss</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="abstract">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Abstract</h2>
+    <div class="content has-text-justified">
+      <p>Machine-learning surrogates are increasingly used to predict how a structure responds to its geometry. However,
+      existing scientific-ML benchmarks rarely use a change in the physical mechanism itself as the source of a
+      distribution shift. Their shifts come from random splits, new initial conditions or held-out ranges of sampled
+      inputs. Here, we introduce BLISS, a dataset and benchmark of 8,528 imperfect hemispherical shells simulated with
+      finite elements until collapse, in which an instability creates the shift. A small change in geometry, two defects
+      moving close enough to interact, changes how the shell collapses. Models map the surface with its defects to three
+      outputs of the collapse, the collapse load (knockdown factor), the displacement field and the failure site where
+      collapse starts. Within distribution, as on existing benchmarks, the best models reach a field R&sup2; of 0.985 and
+      find 98% of clear failure sites. With deeper defects they lose the failure site where defects interact. Trained on
+      shells with far-apart defects and tested on shells with close defects, every model that reads the shell geometry
+      scores below a constant prediction of the average training shell on the field. Moving a single pair of defects from
+      25&deg; to 10&deg; apart lowers the collapse load by 14% in the solver, while the models predict almost no change.
+      Five dense examples recover most of the field of two models, and the choice between two nearly equal failure sites
+      stays close to chance. Our simulations match eight physical tests within 3.3%.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="dataset">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Dataset</h2>
+    <div class="content">
+      <p>Each BLISS sample is one imperfect shell, a clamped hemisphere (R = 25.4 mm, R/t = 110) with small inward defects,
+      loaded by external pressure until it collapses. The input is the surface deviation <code>w</code> at the 76,805 nodes
+      of one shared mesh. The targets are the knockdown factor &kappa;, the displacement field at the first limit point,
+      and the failure site read from it.</p>
+    </div>
+    <div class="columns is-mobile is-multiline ds-panels">
+      <div class="column is-3-desktop is-6-mobile"><img src="static/images/ds_a.png" alt="sparse shell"></div>
+      <div class="column is-3-desktop is-6-mobile"><img src="static/images/ds_b.png" alt="dense shell"></div>
+      <div class="column is-3-desktop is-6-mobile"><img src="static/images/ds_c.png" alt="field"></div>
+      <div class="column is-3-desktop is-6-mobile"><img src="static/images/ds_d.png" alt="mesh"></div>
+    </div>
+    <h3 class="title is-5">What is released</h3>
+    <div class="table-container">
+      <table class="table is-fullwidth is-striped is-narrow">
+        <thead><tr><th>block</th><th class="has-text-right">shells</th><th>content</th></tr></thead>
+        <tbody>
+          <tr><td>core</td><td class="has-text-right">4,399</td><td>11 to 81 defects; <code>w</code>, displacement at the peak and one solver step on either side, load path, &kappa;, site ratio q</td></tr>
+          <tr><td>intervention tests P1&ndash;P4</td><td class="has-text-right">1,870</td><td>edits of core shells (rotate, move, bring closer, delete defects), with the same fields and their source id; evaluation only</td></tr>
+          <tr><td>single- and two-defect shells</td><td class="has-text-right">2,259</td><td>defect parameters and &kappa; as table rows</td></tr>
+          <tr class="total"><td>total</td><td class="has-text-right">8,528</td><td>all simulated by the authors; data CC BY 4.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3 class="title is-5">Terms used on this page</h3>
+    <div class="content">
+      <ul>
+        <li><b>Knockdown factor &kappa;</b>: collapse pressure over the classical pressure of the perfect sphere.</li>
+        <li><b>Sparse / dense</b>: any two defect centres at least 25&deg; apart (11 to 18 defects), or at least 10&deg; apart (69 to 81 defects). Defects interact when they are close.</li>
+        <li><b>Failure site</b>: where the buckling deviation (the displacement after removing the uniform contraction) is largest.</li>
+        <li><b>Site ratio q</b>: amplitude of the second competing site over the first. <b>Clear winner</b>: q &lt; 0.7. <b>Near-tie</b>: q &gt; 0.9.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="explorer">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Dataset Explorer</h2>
+    <div class="content"><p>Shells of the review subset, seen from the pole, at the 8,192 nodes every model is scored on.
+    Left: the input <code>w</code>. Right: the magnitude of the buckling deviation at the peak load, with the failure site
+    marked.</p></div>
+    <div class="tabs is-toggle is-small" id="explorer-tabs">
+      <ul>
+        <li class="is-active" data-mode="p3"><a>Two defects moving closer (P3)</a></li>
+        <li data-mode="shells"><a>All 55 core shells of the subset</a></li>
+        <li data-mode="tables"><a>Single- and two-defect shells</a></li>
+      </ul>
+    </div>
+    <div id="p3-controls" class="field">
+      <div class="select is-small mb-2"><select id="p3-select"></select></div>
+      <label class="label is-small">Spacing of the pair: <span id="p3-label">25&deg;</span></label>
+      <input id="p3-slider" class="slider" type="range" min="0" max="4" step="1" value="0">
+      <p class="help" id="p3-help"></p>
+    </div>
+    <div id="shell-controls" class="field is-hidden">
+      <div class="select is-small"><select id="shell-select"></select></div>
+    </div>
+    <div class="columns" id="shell-plots">
+      <div class="column"><div id="plot-w" class="plot"></div></div>
+      <div class="column"><div id="plot-d" class="plot"></div></div>
+    </div>
+    <div class="columns is-hidden" id="table-plots">
+      <div class="column"><div id="plot-single" class="plot"></div></div>
+      <div class="column"><div id="plot-double" class="plot"></div></div>
+    </div>
+    <p class="kappa-readout" id="readout"></p>
+  </div>
+</section>
+
+<section class="section" id="load">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Load the Data</h2>
+<pre><code>import bliss
+d = bliss.load("BLISS-1.0")              # the release, or the review subset
+train, val, test = d.split("B1")
+s = d[test[0]]
+s.w, s.U, s.kappa, s.q                   # input, field target, scalar target, site ratio
+
+from bliss.metrics import score_ci
+m = score_ci("outputs/figconv_v2random_test_pred.npz")["metrics"]
+m["kappa_rel_err"], m["buckling_r2"]     # point value and 95% shell-bootstrap interval</code></pre>
+  </div>
+</section>
+
+<section class="section" id="protocol">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Benchmark Protocol</h2>
+    <h3 class="title is-5">Task</h3>
+    <div class="content"><p>From the surface deviation <code>w</code>, predict &kappa;, the displacement field at the peak load
+    and the failure site. Models that read the list of defects instead of the geometry are reported apart.</p></div>
+    <h3 class="title is-5">Evaluation protocols</h3>
+    <div class="table-container">
+      <table class="table is-fullwidth is-striped is-narrow">
+        <thead><tr><th>protocol</th><th class="has-text-right">train / val / test</th><th>what changes</th></tr></thead>
+        <tbody>
+          <tr><td><b>B1</b> within distribution</td><td class="has-text-right">3,299 / 440 / 660</td><td>nothing (random split, seed 2027), the role of existing benchmarks</td></tr>
+          <tr><td><b>B2</b> deeper defects</td><td class="has-text-right">2,789 / 376 / 1,234</td><td>test shells have their deepest defect above 2.35 t</td></tr>
+          <tr><td><b>B3</b> sparse to dense</td><td class="has-text-right">1,934 / 265 / 2,200</td><td>train on sparse shells, test on dense shells, where defects interact</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3 class="title is-5">Metrics</h3>
+    <div class="content"><ul>
+      <li><b>MRE &kappa;</b>: median relative error of the knockdown factor.</li>
+      <li><b>Buckling R&sup2;</b>: R&sup2; of the displacement field after removing each shell's uniform contraction.</li>
+      <li><b>Clear-site accuracy</b>: share of clear winners whose predicted site lies within 10&deg; of the true one.</li>
+      <li><b>Near-tie winner rate</b>: on near-ties, share where the model deflects more at the true site than at the second candidate (chance 50%).</li>
+    </ul><p>Every learned model is the mean of three seeds, with hyperparameters searched on B1 and frozen for B2 and B3.
+    Intervals are shell bootstraps; comparisons are paired.</p></div>
+  </div>
+</section>
+
+<section class="section" id="leaderboard">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Leaderboard</h2>
+    <div class="content"><p>Table 2 of the paper. Learned models give the mean over three seeds; field metrics are taken after
+    removing the uniform shrink; bold marks the best learned model on 8,192 nodes.</p></div>
+    <div class="field has-addons" id="lb-tabs">
+      <p class="control"><button class="button is-small is-dark" data-p="0">B1 within distribution</button></p>
+      <p class="control"><button class="button is-small" data-p="1">B2 deeper defects</button></p>
+      <p class="control"><button class="button is-small" data-p="2">B3 sparse to dense</button></p>
+    </div>
+    <div class="table-container"><table class="table is-fullwidth is-narrow is-hoverable lb" id="lb"></table></div>
+    <p class="help">&dagger; reads the list of defects. &lowast; SFNO on a 64&times;128 grid. &Dagger; deepest point of <code>w</code>. div.: diverged.
+    Full-mesh models are trained on all 76,805 nodes and scored on the 8,192.</p>
+  </div>
+</section>
+
+<section class="section" id="results">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Results</h2>
+    <h3 class="title is-5">Accuracy falls from B1 to B3</h3>
+    <figure class="image"><img src="static/images/ladder.png" alt="Results across the three protocols"></figure>
+    <div class="content"><p>On B1 the geometry models approach the solver's own resolution. With deeper defects (B2) they
+    keep the field and lose the failure site where defects interact. From sparse to dense (B3) every geometry model falls
+    below the training mean on the field, and the ranking of the models inverts.</p></div>
+    <h3 class="title is-5">Why the predictions degrade</h3>
+    <div class="content"><p>Collapse starts at the deepest defect on all 94 sparse B1 test shells with a clear winner, so a
+    model trained on sparse shells can learn that shortcut. It holds on only 38% of the clear winners among dense shells,
+    because neighbouring defects buckle together. A sharp deflection at the wrong defect adds error twice, so the sharp
+    prediction loses to the smooth mean.</p></div>
+    <h3 class="title is-5">One pair of defects moved closer</h3>
+    <figure class="image"><img src="static/images/intervention.png" alt="Intervention test P3"></figure>
+    <div class="content"><p>Moving one pair of defects from 25&deg; to 10&deg; lowers &kappa; by 14% (median over 100 shells)
+    and moves the failure site between the two defects on 97% of the shells. Models trained on B1 predict changes between
+    &minus;1.1% and +0.3%.</p></div>
+    <h3 class="title is-5">Few-shot adaptation</h3>
+    <figure class="image"><img src="static/images/fewshot.png" alt="Few-shot adaptation on B3"></figure>
+    <div class="content"><p>Five dense shells recover most of the field of FigConvNet and the Transformer; the near-tie
+    winner rate stays between 46% and 52% at every k.</p></div>
+  </div>
+</section>
+
+<section class="section" id="more">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">More Results from the Paper</h2>
+    <div class="columns is-multiline">
+      <div class="column is-full"><figure><img src="static/images/field_examples.png" alt="Field reconstructions"><figcaption>Field reconstructions and error maps of every model on B1, B2 and B3.</figcaption></figure></div>
+      <div class="column is-half"><figure><img src="static/images/validation.png" alt="Experimental validation"><figcaption>The simulated collapse load against eight physical tests (within 3.3%).</figcaption></figure></div>
+      <div class="column is-half"><figure><img src="static/images/stats_q.png" alt="Dataset statistics"><figcaption>Knockdown factor, site ratio q and spacing of the core shells.</figcaption></figure></div>
+      <div class="column is-full"><figure><img src="static/images/sweeps.png" alt="Intervention tests"><figcaption>The intervention tests P1 to P4 in the solver.</figcaption></figure></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="scope">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Scope and Future Work</h2>
+    <div class="content"><p>By holding the shell family and load case fixed, BLISS is designed to isolate geometry-induced
+    changes in the instability mechanism, so that changes in model performance can be attributed more directly to
+    geometry. Extending this controlled setting to other structures and loads, and learning the near-tie decision, are the
+    next steps.</p></div>
+  </div>
+</section>
+
+<section class="section" id="resources">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Resources</h2>
+    <div class="content"><ul>
+      <li><b>Data</b>: review subset on OSF (anonymous link above); the full release (8,528 shells) is available to reviewers on request and will be public at publication.</li>
+      <li><b>Code</b>: loader, scorer, the eight field models with one training recipe, the search, the models on the list of defects, the references, the intervention tests and the tables (this repository).</li>
+      <li><b>License</b>: data CC BY 4.0, code MIT.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section class="section" id="citation">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Citation</h2>
+<pre><code>@inproceedings{bliss2027,
+  title     = {BLISS: A Dataset and Benchmark for the Buckling of Imperfect Spherical Shells},
+  author    = {Anonymous},
+  booktitle = {Under review},
+  year      = {2026}
+}</code></pre>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="content has-text-centered"><p>BLISS &middot; anonymous review version</p></div>
+</footer>
+
+<script src="static/js/app.js"></script>
+</body>
+</html>
