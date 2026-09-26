@@ -1,0 +1,8 @@
+# Base environment. The packages are installed afterwards with `make install` (see README, Install),
+# because PyTorch, torch-harmonics and PhysicsNeMo must be installed in a fixed order.
+name: bliss
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip

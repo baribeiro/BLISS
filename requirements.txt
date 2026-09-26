@@ -1,0 +1,24 @@
+# BLISS: runtime dependencies (Python 3.11), pinned to the environment that produced the paper results.
+# PyTorch, torch-harmonics and PhysicsNeMo are installed first, in a fixed order (see README, Install).
+# Install this file with the constraint that keeps torch at 2.9.1:  pip install -r requirements.txt -c constraints.txt
+
+numpy==2.4.6
+scipy==1.17.1
+pandas==3.0.5
+pyarrow==25.0.1
+h5py==3.16.0
+matplotlib==3.11.2
+optuna==5.0.0
+scikit-learn==1.9.1
+warp-lang==1.17.0
+
+# models on the list of defects
+xgboost==3.2.0
+lightgbm==4.7.0
+catboost==1.2.10
+pytorch-tabnet==4.1.0
+rtdl_revisiting_models==0.0.2
+tabpfn==9.0.0
+
+# tests
+pytest

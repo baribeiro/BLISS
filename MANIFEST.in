@@ -1,0 +1,4 @@
+include README.md LICENSE requirements.txt environment.yml
+recursive-include configs *.json
+recursive-include docs *.png
+include requirements-physicsnemo.txt constraints.txt

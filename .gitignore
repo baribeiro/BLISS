@@ -1,0 +1,14 @@
+BLISS-1.0
+BLISS
+release
+metadata
+splits/v2/
+outputs/
+runs/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+*.odb
+*.inp
+BLISS.zip

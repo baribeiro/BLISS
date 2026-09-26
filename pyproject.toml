@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bliss"
+version = "1.0.0"
+description = "BLISS: a dataset and benchmark for the buckling of imperfect spherical shells (loader and scorer)"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [{name = "The BLISS authors"}]
+dependencies = ["numpy>=2.0", "scipy>=1.14"]
+
+[project.optional-dependencies]
+benchmark = ["torch>=2.9", "torch-harmonics==0.8.0", "nvidia-physicsnemo==2.2.2", "optuna>=5.0", "pandas>=3.0",
+             "h5py", "matplotlib", "scikit-learn", "xgboost", "lightgbm", "catboost", "pytorch-tabnet",
+             "rtdl_revisiting_models", "tabpfn"]
+dev = ["pytest", "ruff"]
+
+[tool.setuptools.packages.find]
+include = ["bliss*"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+# the default rule set of ruff 0.13, fixed so that newer versions check the same rules
+select = ["E4", "E7", "E9", "F"]
+# the compact style of the research code: several statements on one line, short lambdas, one-letter names
+ignore = ["E401", "E402", "E701", "E702", "E731", "E741"]
