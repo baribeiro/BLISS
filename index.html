@@ -278,7 +278,10 @@ score_ci("preds.npz")["metrics"]    # every metric of the paper</code></pre>
     <div class="table-container lb-table-wrap"><table class="table is-fullwidth is-narrow is-hoverable data lb" id="lb"></table></div>
     <p class="how">Table 2 of the paper. Learned models give the mean over three seeds; field metrics after removing the uniform
     shrink; bold red marks the best learned model on 8,192 nodes. Click a column header to sort. &dagger; reads the list of
-    defects. &lowast; SFNO on a 64&times;128 grid. &Dagger; deepest point of w. div.: diverged.</p>
+    defects. &lowast; SFNO on a 64&times;128 grid. &Dagger; deepest point of w. div.: diverged. Full-mesh B2 and B3 are
+    reported for FigConvNet, SFNO and Transolver. Models differ in input (w or the list of defects) and output (field and &kappa;, or
+    &kappa; only): the table lists every model that predicts the field and the best &kappa;-only model, and the other models are in
+    the full tables below.</p>
     <h3 class="title is-5" style="margin-top:1.5rem;">Ranking</h3>
     <div class="buttons has-addons" id="rank-metric">
       <button class="button is-small is-selected" data-m="buckling_r2">buckling R&sup2;</button>
