@@ -135,6 +135,19 @@
         </tbody>
       </table>
     </div>
+    <h3 class="title is-5">Files</h3>
+    <div class="table-container">
+      <table class="table is-fullwidth is-narrow schema">
+        <thead><tr><th>file</th><th>content</th></tr></thead>
+        <tbody>
+          <tr><td class="grp"><code>shared.npz</code></td><td>the shared mesh: unit node directions <code>P</code> (76,805 &times; 3), S4R connectivity <code>conn</code>, radius <code>R</code>, and the map to the 180 &times; 720 grid</td></tr>
+          <tr><td class="grp"><code>canonical/&lt;id&gt;.npz</code></td><td>one record per core shell: <code>w</code> (input), <code>kappa</code> and <code>U_peak</code> (targets), <code>U_prev</code>, <code>U_next</code>, <code>mode</code>, the load path <code>lpf</code> with <code>peak_frame</code>, and <code>q</code>, <code>r_d2_d1</code>, <code>implied_gap_pct</code></td></tr>
+          <tr><td class="grp"><code>sweeps/</code></td><td>the records of the intervention tests P1&ndash;P4, same keys, with the id of their source shell</td></tr>
+          <tr><td class="grp"><code>metadata/</code></td><td>one row per shell (<code>shells.csv</code>) and per defect (<code>defect_parameters.csv</code>: &delta;, &lambda;, &theta;, &phi;), the site ratio q and the two competing sites (<code>truth_dominance.csv</code>), and the single- and two-defect shells</td></tr>
+          <tr><td class="grp"><code>splits/</code></td><td><code>B1.json</code>, <code>B2.json</code>, <code>B3.json</code>: the three protocols, fixed with seed 2027</td></tr>
+        </tbody>
+      </table>
+    </div>
     <h3 class="title is-5">Terms used on this page</h3>
     <div class="content"><ul>
       <li><b>Knockdown factor &kappa;</b>: collapse pressure over the classical pressure of the same shell without defects.</li>
@@ -151,7 +164,12 @@
     <h2 class="title is-3">Dataset Explorer</h2>
     <p class="how">Every shell of the review subset. Pick a family of shells, then a shell in the list. The shell is drawn from
     its list of defects with the generator of the dataset; for shells with fields, switch to the shape at collapse.</p>
-    <div class="buttons has-addons" id="cat-tabs"></div>
+    <div class="field is-grouped is-grouped-multiline" style="align-items:center;">
+      <div class="control"><div class="buttons has-addons" id="cat-tabs" style="margin-bottom:0"></div></div>
+      <div class="control"><div class="field has-addons">
+        <div class="control"><input class="input is-small" id="shell-find" type="text" placeholder="shell id, e.g. 6337" style="width:150px"></div>
+        <div class="control"><button class="button is-small is-dark" id="shell-go">find</button></div></div></div>
+    </div>
     <div class="columns">
       <div class="column is-5">
         <div id="plot-cat" class="plot plot-short"></div>
@@ -160,13 +178,15 @@
       <div class="column is-7">
         <div class="field is-grouped is-grouped-multiline controls-3d">
           <div class="control"><div class="buttons has-addons" id="mode3d">
-            <button class="button is-small is-selected" data-v="geom">geometry</button>
-            <button class="button is-small" data-v="collapse">shape at collapse</button></div></div>
+            <button class="button is-small is-selected" data-v="geom">before loading</button>
+            <button class="button is-small" data-v="collapse">at collapse</button>
+            <button class="button is-small" data-v="after">after collapse</button></div></div>
           <div class="control exag"><label class="label is-small">exaggeration &times;<span id="exag-lab"></span></label>
             <input id="exag" class="slider" type="range" min="1" max="40" step="1" value="10"></div>
         </div>
         <div id="plot-3d" class="plot plot-tall"></div>
         <p class="how" id="view-how"></p>
+        <div id="plot-lpf" class="plot plot-short"></div>
         <dl class="sim-card" id="sim-card"></dl>
         <div class="table-container"><table class="table is-narrow data" id="defect-table"></table></div>
       </div>
@@ -230,6 +250,19 @@ m["kappa_rel_err"], m["buckling_r2"]     # point value and 95% shell-bootstrap i
     <p class="how">Table 2 of the paper. Learned models give the mean over three seeds; field metrics after removing the uniform
     shrink; bold red marks the best learned model on 8,192 nodes. Click a column header to sort. &dagger; reads the list of
     defects. &lowast; SFNO on a 64&times;128 grid. &Dagger; deepest point of w. div.: diverged.</p>
+    <h3 class="title is-5" style="margin-top:1.5rem;">Ranking</h3>
+    <div class="buttons has-addons" id="rank-metric">
+      <button class="button is-small is-selected" data-m="buckling_r2">buckling R&sup2;</button>
+      <button class="button is-small" data-m="kappa_mre">MRE &kappa; [%]</button>
+      <button class="button is-small" data-m="clear_site">clear-site accuracy</button>
+      <button class="button is-small" data-m="near_tie">near-tie winner rate</button>
+    </div>
+    <div class="columns">
+      <div class="column is-7"><div id="plot-rank" class="plot plot-tall"></div>
+        <p class="how">Every model and reference of the selected protocol, best on top, with the 95% shell-bootstrap interval.
+        Click a bar to open the model.</p></div>
+      <div class="column is-5"><div id="model-card"></div></div>
+    </div>
     <details class="full-lb">
       <summary>Show all models and all metrics (the full results tables of the paper)</summary>
       <div class="table-container"><table class="table is-fullwidth is-narrow is-hoverable data lb" id="lb-full"></table></div>

@@ -83,13 +83,13 @@ function generateW(rec) {
   }
   return w;
 }
-function deviationNodes(s) {
-  const g = state.geo, n = g.x.length; let ub = 0;
-  for (let i = 0; i < n; i++) ub += s.ux[i] * g.x[i] + s.uy[i] * g.y[i] + s.uz[i] * g.z[i];
+function deviationNodes(s, key = "u") {
+  const g = state.geo, n = g.x.length, ux = s[key + "x"], uy = s[key + "y"], uz = s[key + "z"]; let ub = 0;
+  for (let i = 0; i < n; i++) ub += ux[i] * g.x[i] + uy[i] * g.y[i] + uz[i] * g.z[i];
   ub /= n;
   const D = { x: new Float64Array(n), y: new Float64Array(n), z: new Float64Array(n), m: new Float64Array(n), site: 0 };
   for (let i = 0; i < n; i++) {
-    D.x[i] = s.ux[i] - ub * g.x[i]; D.y[i] = s.uy[i] - ub * g.y[i]; D.z[i] = s.uz[i] - ub * g.z[i];
+    D.x[i] = ux[i] - ub * g.x[i]; D.y[i] = uy[i] - ub * g.y[i]; D.z[i] = uz[i] - ub * g.z[i];
     D.m[i] = Math.hypot(D.x[i], D.y[i], D.z[i]); if (D.m[i] > D.m[D.site]) D.site = i;
   }
   return D;
@@ -100,7 +100,7 @@ function scene3d() {
 }
 function drawShell() {
   const rec = state.sel; if (!rec) return;
-  const cat = CATS.find(c => c.key === state.catKey), collapse = state.mode === "collapse" && cat.fields;
+  const cat = CATS.find(c => c.key === state.catKey), collapse = (state.mode === "collapse" || state.mode === "after") && cat.fields;
   const g = state.grid, n = g.x.length, sg = shellGeom(rec), w = generateW(rec);
   const finish = (color, cs, cbar, disp, site) => {
     const X = new Float64Array(n), Y = new Float64Array(n), Z = new Float64Array(n), e = state.exag;
@@ -116,23 +116,39 @@ function drawShell() {
       marker: { size: 7, color: PAPER.red, line: { color: "#fff", width: 1.5 } }, hoverinfo: "skip" });
     render("plot-3d", tr, baseLayout({ margin: { l: 0, r: 0, t: 6, b: 0 }, scene: scene3d() }));
   };
+  if (!cat.fields) render("plot-lpf", [], baseLayout({ xaxis: axis("", { visible: false }), yaxis: axis("", { visible: false }),
+    annotations: [{ text: "table rows only: the defect list and \u03ba, no load path", showarrow: false, font: { color: T.ink2, size: 12 } }],
+    margin: { l: 10, r: 10, t: 10, b: 10 } }));
+  else loadShell(rec.id).then(s => {
+    const k = rec.kappa / s.lpf[s.peak], y = s.lpf.map(v => v * k), x = y.map((v, i) => i);
+    const at = state.mode === "geom" ? 0 : state.mode === "collapse" ? s.peak : Math.min(s.peak + 3, y.length - 1);
+    render("plot-lpf", [
+      { type: "scatter", mode: "lines", x: x, y: y, line: { color: PAPER.blue, width: 2.5 }, hovertemplate: "increment %{x}: %{y:.3f}<extra></extra>" },
+      { type: "scatter", mode: "markers", x: [s.peak], y: [y[s.peak]], marker: { size: 11, color: PAPER.red, symbol: "star" }, hovertemplate: "collapse: \u03ba = %{y:.3f}<extra></extra>" },
+      { type: "scatter", mode: "markers", x: [at], y: [y[at]], marker: { size: 13, color: "rgba(0,0,0,0)", line: { color: "#000", width: 2 } }, hoverinfo: "skip" }],
+      baseLayout({ xaxis: axis("solver increment"), yaxis: axis("load / classical load"), margin: { l: 58, r: 16, t: 10, b: 44 } }));
+  });
   if (!collapse) {
     finish(Array.from(w), BLUE_SEQ, "w [mm]", null, null);
     $("view-how").innerHTML = "The geometry, drawn from the list of defects with the depth exaggerated &times;" + state.exag +
       ". Colour: the surface deviation w. Drag to rotate.";
   } else {
     loadShell(rec.id).then(s => {
-      const D = deviationNodes(s), near = g.near, m = new Array(n), disp = { x: new Float64Array(n), y: new Float64Array(n), z: new Float64Array(n) };
+      const D = deviationNodes(s, state.mode === "after" ? "m" : "u"), near = g.near, m = new Array(n), disp = { x: new Float64Array(n), y: new Float64Array(n), z: new Float64Array(n) };
       let site = 0;
       for (let i = 0; i < n; i++) { const j = near[i]; m[i] = D.m[j]; disp.x[i] = D.x[j]; disp.y[i] = D.y[j]; disp.z[i] = D.z[j]; if (j === D.site) site = i; }
       finish(m, RED_SEQ, "|D| [mm]", disp, site);
-      $("view-how").innerHTML = "The shape at collapse: the buckling deviation at the peak load (displacement exaggerated &times;" +
+      $("view-how").innerHTML = (state.mode === "after" ? "After collapse, three solver increments past the peak: the buckle grows at the failure site"
+        : "At collapse, the first limit point of the load path: the buckling deviation") + " (displacement exaggerated &times;" +
         state.exag + "), from the finite-element solution at the 8,192 scoring nodes. The red marker is the failure site.";
     });
   }
 }
 function drawCard() {
-  const r = state.sel, k = state.catKey, rows = [["shell", r.id], ["&kappa;", r.kappa.toFixed(3)]];
+  const r = state.sel, k = state.catKey;
+  const catlab = { sparse: "multi-defect, sparse (centres &ge; 25&deg; apart)", dense: "multi-defect, dense (centres &ge; 10&deg; apart)",
+    p3: "P3 record: one pair brought to " + r.spacing + "&deg;", double: "two-defect shell", single: "single-defect shell" }[k];
+  const rows = [["shell", r.id], ["family", catlab], ["&kappa;", r.kappa.toFixed(3)]];
   if (k === "sparse" || k === "dense") rows.push(["defects", r.n], ["deepest defect", r.dmax.toFixed(2) + " t"],
     ["site ratio q", r.q.toFixed(2) + (r.q > 0.9 ? " near-tie" : r.q < 0.7 ? " clear" : "")],
     ["splits", ["B1", "B2", "B3"].map(b => b + " " + (r.parts[b] || "&ndash;")).join(" &middot; ")]);
@@ -212,6 +228,10 @@ function initExplorer() {
     if (b.disabled) return; selectButton("mode3d", b); state.mode = b.dataset.v; drawShell(); }));
   $("exag").addEventListener("input", e => { state.exag = +e.target.value; $("exag-lab").textContent = state.exag; drawShell(); });
   $("exag-lab").textContent = state.exag;
+  const find = () => { const id = +$("shell-find").value.trim();
+    for (const c of CATS) { const r = items(c.key).find(q => q.id === id); if (r) { selectCat(c.key); selectShell(r); return; } }
+    $("shell-find").classList.add("is-danger"); setTimeout(() => $("shell-find").classList.remove("is-danger"), 1200); };
+  $("shell-go").addEventListener("click", find); $("shell-find").addEventListener("keydown", e => { if (e.key === "Enter") find(); });
   selectCat("dense");
 }
 
@@ -284,6 +304,54 @@ function drawFull(p) {
     h += "<tr><td class='l'>" + r.name + "</td>" + cols.map(c => "<td>" + (r.cells[c] === undefined ? "" : fmtCell(r.cells[c])) + "</td>").join("") + "</tr>";
   }
   $("lb-full").innerHTML = h + "</tbody>";
+}
+
+// ------------------------------------------------------------ ranking --
+const RANK = { metric: "buckling_r2", model: null };
+const HIGHER = { buckling_r2: true, kappa_mre: false, clear_site: true, near_tie: true };
+function rankColor(r) {
+  if (r.group === "references") return PAPER.grey;
+  if (r.group === "solver") return PAPER.greyDark;
+  if (r.group === "models on the list of defects") return PAPER.lightBrown;
+  return MODEL_COL[r.name.split(" (")[0]] || PAPER.blue;
+}
+function drawRank() {
+  if (!FULL) return;
+  const m = RANK.metric, pct = (m === "clear_site" || m === "near_tie") ? 100 : 1;
+  const rows = FULL.protocols[["B1", "B2", "B3"][LB_P]].filter(r => r.cells[m] && typeof r.cells[m] !== "string");
+  rows.sort((a, b) => (HIGHER[m] ? 1 : -1) * (a.cells[m][0] - b.cells[m][0]));
+  const name = (r) => r.name.split(" (")[0].replace("\n", " ");
+  const tr = [{ type: "bar", orientation: "h", y: rows.map(name), x: rows.map(r => r.cells[m][0] * pct), customdata: rows.map(r => r.name),
+    marker: { color: rows.map(rankColor), line: { color: rows.map(r => r.name === RANK.model ? "#000" : "rgba(0,0,0,0)"), width: 2.5 } },
+    error_x: { type: "data", symmetric: false, array: rows.map(r => r.cells[m].length === 3 ? (r.cells[m][2] - r.cells[m][0]) * pct : 0),
+      arrayminus: rows.map(r => r.cells[m].length === 3 ? (r.cells[m][0] - r.cells[m][1]) * pct : 0), color: PAPER.darkGrey, thickness: 1 },
+    hovertemplate: "%{y}: %{x:.3f}<extra></extra>" }];
+  const xl = { buckling_r2: "buckling R\u00b2", kappa_mre: "median relative error of \u03ba [%]", clear_site: "clear-site accuracy [%]", near_tie: "near-tie winner rate [%]" }[m];
+  render("plot-rank", tr, baseLayout({ xaxis: axis(xl, { type: m === "kappa_mre" ? "log" : "linear" }),
+    yaxis: axis("", { automargin: true, tickfont: { size: 11, color: T.ink3 } }), margin: { l: 10, r: 16, t: 10, b: 48 } }));
+  const el = $("plot-rank");
+  if (!el._bound) { el._bound = true; el.on("plotly_click", ev => { RANK.model = ev.points[0].customdata; drawRank(); drawModelCard(); }); }
+}
+function drawModelCard() {
+  const n = RANK.model; if (!n || !FULL) { $("model-card").innerHTML = "<p class='how'>Click a model in the ranking.</p>"; return; }
+  const P = ["B1", "B2", "B3"], get = (p, c) => { const r = FULL.protocols[p].find(x => x.name === n); const v = r && r.cells[c];
+    return (v && typeof v !== "string") ? v[0] : null; };
+  const f = (v, c) => v === null ? "&ndash;" : (c === "clear_site" || c === "near_tie") ? (100 * v).toFixed(0) + "%" : v.toFixed(c === "kappa_mre" ? 2 : 3);
+  const cols = [["kappa_mre", "MRE \u03ba [%]"], ["buckling_r2", "buckling R\u00b2"], ["clear_site", "clear site"], ["near_tie", "near-tie"]];
+  let h = "<p class='result-tag'>model</p><h4 class='title is-5'>" + n.split(" (")[0] + "</h4><table class='table is-narrow is-fullwidth data'><thead><tr><th class='l'></th>" +
+    cols.map(c => "<th>" + c[1] + "</th>").join("") + "</tr></thead><tbody>" +
+    P.map(p => "<tr><td class='l'><b>" + p + "</b></td>" + cols.map(c => "<td>" + f(get(p, c[0]), c[0]) + "</td>").join("") + "</tr>").join("") + "</tbody></table>";
+  const sp = P.map(p => [get(p, "sparse_r2"), get(p, "dense_r2"), get(p, "sparse_kappa"), get(p, "dense_kappa")]);
+  h += "<p class='is-size-7 has-text-weight-semibold'>by regime of the test shells</p><table class='table is-narrow is-fullwidth data'><thead><tr><th class='l'></th><th>sparse bkl. R\u00b2</th><th>dense bkl. R\u00b2</th><th>sparse \u03ba err</th><th>dense \u03ba err</th></tr></thead><tbody>" +
+    P.map((p, i) => "<tr><td class='l'><b>" + p + "</b></td>" + sp[i].map((v, j) => "<td>" + (v === null ? "&ndash;" : v.toFixed(j < 2 ? 3 : 2)) + "</td>").join("") + "</tr>").join("") + "</tbody></table>";
+  const b1 = get("B1", "buckling_r2"), b3 = get("B3", "buckling_r2");
+  if (b1 !== null && b3 !== null) h += "<p class='takeaway-live'>Buckling R\u00b2 goes from " + b1.toFixed(3) + " on B1 to " + b3.toFixed(3) +
+    " on B3" + (b3 < 0.34 ? ", below the training mean (0.340)." : ".") + "</p>";
+  $("model-card").innerHTML = h;
+}
+function initRank() {
+  document.querySelectorAll("#rank-metric .button").forEach(b => b.addEventListener("click", () => { selectButton("rank-metric", b); RANK.metric = b.dataset.m; drawRank(); }));
+  RANK.model = FULL.protocols.B1[0].name; drawRank(); drawModelCard();
 }
 
 // ------------------------------------------------------------- ladder --
@@ -367,8 +435,8 @@ function showShift(k) {
 document.addEventListener("DOMContentLoaded", () => {
   drawLeaderboard(0);
   document.querySelectorAll("#lb-tabs .button").forEach(b => b.addEventListener("click", () => {
-    selectButton("lb-tabs", b); drawLeaderboard(+b.dataset.p); drawFull(+b.dataset.p); }));
-  getJSON("leaderboard.json").then(d => { FULL = d; drawFull(0); initLadder(); });
+    selectButton("lb-tabs", b); drawLeaderboard(+b.dataset.p); drawFull(+b.dataset.p); drawRank(); }));
+  getJSON("leaderboard.json").then(d => { FULL = d; drawFull(0); initLadder(); initRank(); });
   Promise.all([getJSON("grid.json"), getJSON("geometry.json"), getJSON("catalog.json")]).then(([gr, g, c]) => {
     state.grid = gr; state.geo = g; state.cat = c; initExplorer();
   });

@@ -49,6 +49,15 @@ def main():
     json.dump(dict(R=R, x=np.round(Q[:, 0], 5).tolist(), y=np.round(Q[:, 1], 5).tolist(), z=np.round(Q[:, 2], 5).tolist(),
                    i=tri[:, 0].tolist(), j=tri[:, 1].tolist(), k=tri[:, 2].tolist()),
               open(OUT / "geometry.json", "w"), separators=(",", ":"))
+    def write_shell(z, i):
+        """Per-shell file: w, the displacement at the peak (U) and after it (U + mode), and the load path."""
+        U = z["U_peak"][nodes] @ B.T; M = (z["U_peak"][nodes] + z["mode"][nodes]) @ B.T
+        out = dict(w=np.round(z["w"][nodes], 4).tolist(), lpf=np.round(z["lpf"], 5).tolist(), peak=int(z["peak_frame"]))
+        for k, A in (("u", U), ("m", M)):
+            for c, ax_ in enumerate("xyz"):
+                out[k + ax_] = np.round(A[:, c], 4).tolist()
+        json.dump(out, open(OUT / "shells" / ("%d.json" % i), "w"), separators=(",", ":"))
+
     kd = {int(r["id"]): r for r in csv.DictReader(open(os.path.join(S, "metadata", "shells.csv")))}
     dp = {}
     for r in csv.DictReader(open(os.path.join(S, "metadata", "defect_parameters.csv"))):
@@ -64,19 +73,14 @@ def main():
     core = []
     for f in sorted(os.listdir(os.path.join(S, "canonical"))):
         i = int(f[:-4]); z = np.load(os.path.join(S, "canonical", f))
-        U = z["U_peak"][nodes] @ B.T
-        json.dump(dict(w=np.round(z["w"][nodes], 4).tolist(), ux=np.round(U[:, 0], 4).tolist(),
-                       uy=np.round(U[:, 1], 4).tolist(), uz=np.round(U[:, 2], 4).tolist()),
-                  open(OUT / "shells" / ("%d.json" % i), "w"), separators=(",", ":"))
+        write_shell(z, i)
         n = len(dp[i])
         core.append(dict(id=i, n=n, dmax=round(max(dp[i]), 3), kappa=round(float(z["kappa"]), 4), q=round(q[i], 3),
                          regime="sparse" if n <= 18 else "dense", parts=parts.get(i, {}), reason=reasons[i]["reason"]))
     p3 = []
     for r in csv.DictReader(open(os.path.join(S, "sweeps", "P3", "sources.csv"))):
-        i = int(r["id"]); z = np.load(os.path.join(S, "sweeps", "P3", "%d.npz" % i)); U = z["U_peak"][nodes] @ B.T
-        json.dump(dict(w=np.round(z["w"][nodes], 4).tolist(), ux=np.round(U[:, 0], 4).tolist(),
-                       uy=np.round(U[:, 1], 4).tolist(), uz=np.round(U[:, 2], 4).tolist()),
-                  open(OUT / "shells" / ("%d.json" % i), "w"), separators=(",", ":"))
+        i = int(r["id"]); z = np.load(os.path.join(S, "sweeps", "P3", "%d.npz" % i))
+        write_shell(z, i)
         p3.append(dict(id=i, source=int(r["source_id"]), spacing=reasons[i]["reason"].split("spacing ")[1].split(" ")[0],
                        kappa=round(float(z["kappa"]), 4)))
     # fine display grid of the hemisphere (pole along z), with the nearest scoring node of every vertex
