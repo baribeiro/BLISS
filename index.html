@@ -49,6 +49,57 @@
   </div>
 </section>
 
+<section class="section" id="why">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Why BLISS?</h2>
+    <div class="columns">
+      <div class="column"><div class="box story"><p class="story-n">1</p><p class="story-h">Thin shells fail by an instability</p>
+        <p>Pressure vessels and launch vehicles are thin shells. They collapse by buckling, and a defect as deep as the wall
+        thickness can halve the pressure a shell carries. The <b>failure site</b> is the point where collapse starts.</p></div></div>
+      <div class="column"><div class="box story"><p class="story-n">2</p><p class="story-h">A small change of geometry changes the physics</p>
+        <p>When the defects are far apart (<b>sparse</b>), each acts alone. When two come close (<b>dense</b>), they buckle as one
+        region and weaken the shell differently. Two defects moving closer changes the map from input to output.</p></div></div>
+      <div class="column"><div class="box story"><p class="story-n">3</p><p class="story-h">Benchmarks rarely test this</p>
+        <p>In existing scientific-ML benchmarks the test set differs from training through a random split, new initial
+        conditions or a held-out range of a sampled input, so the shift is set by the sampler. In BLISS the <b>instability
+        creates the shift</b>.</p></div></div>
+    </div>
+    <div class="content"><p>BLISS maps the imperfect geometry of hemispherical shells to three outputs of their collapse: the
+    knockdown factor (the collapse pressure divided by that of the same shell without defects), the displacement field at
+    collapse, and the failure site. It asks whether a surrogate that is accurate within distribution still sees the change
+    when the defects start to interact.</p></div>
+    <h3 class="title is-5">Contributions</h3>
+    <div class="content"><ul>
+      <li><b>Dataset.</b> 8,528 nonlinear simulations of shell collapse: a core of 4,399 shells whose defects are either far
+      apart or close together, 1,870 shells edited one factor at a time for intervention tests, and 2,259 shells with one or
+      two defects, checked by a mesh study and against eight physical tests.</li>
+      <li><b>Protocol.</b> Three fixed splits (B1, B2, B3) that move from the usual random split to a shift created by the
+      instability, a few-shot variant of B3, and four intervention tests on edited shells.</li>
+      <li><b>Benchmark.</b> Six geometry models, 20 models that read the list of defects, simple learners and references,
+      about 300 trainings of the field models and 5,194 tabular trials, all scored by one released scorer.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section class="section" id="shift">
+  <div class="container">
+    <h2 class="title is-3">See the Shift for Yourself</h2>
+    <div class="content is-max-desktop"><p>The same dense shell, where defects interact, predicted by each model twice: once trained on
+    B1 (random split, dense shells seen in training) and once trained on B3 (sparse shells only). The top row is the
+    solver. Each panel shows the magnitude of the buckling deviation seen from the pole; the circle marks the predicted
+    failure site and the cross the true one.</p></div>
+    <div class="notification howto"><b>How to read this.</b> Look at the crosses first: they mark where the solver says collapse
+    starts. A circle on the cross means the model found the failure site. The models trained on B1 have seen dense shells and
+    most of them land on the cross; the same architectures trained only on sparse shells (B3) put collapse on another defect,
+    because on sparse shells collapse starts at the deepest defect (all 94 sparse B1 test shells with a clear winner). The percentage is the error of the predicted
+    knockdown factor.</div>
+    <div class="buttons has-addons" id="shift-shells"></div>
+    <div id="shift-truth" class="shift-truth"></div>
+    <div class="shift-grid" id="shift-grid"></div>
+    <p class="help">Seed-0 models of the paper, scored on the 8,192 nodes. Colour scale shared within each panel's shell.</p>
+  </div>
+</section>
+
 <section class="section" id="abstract">
   <div class="container is-max-desktop">
     <h2 class="title is-3">Abstract</h2>
@@ -123,6 +174,9 @@
         <li data-mode="tables"><a>Single- and two-defect shells</a></li>
       </ul>
     </div>
+    <div class="notification howto"><b>How to read this.</b> Move the slider from 25&deg; to 10&deg;. The pair of defects moves
+    closer and every other defect stays. For most shells, from 25&deg; to 12.5&deg; the two defects act alone and &kappa; barely moves; at 10&deg;
+    they interact, &kappa; drops and the failure site moves. Over 100 shells the median drop is 14%. This is the change the models miss.</div>
     <div id="p3-controls" class="field">
       <div class="select is-small mb-2"><select id="p3-select"></select></div>
       <label class="label is-small">Spacing of the pair: <span id="p3-label">25&deg;</span></label>
@@ -170,9 +224,9 @@ m["kappa_rel_err"], m["buckling_r2"]     # point value and 95% shell-bootstrap i
       <table class="table is-fullwidth is-striped is-narrow">
         <thead><tr><th>protocol</th><th class="has-text-right">train / val / test</th><th>what changes</th></tr></thead>
         <tbody>
-          <tr><td><b>B1</b> within distribution</td><td class="has-text-right">3,299 / 440 / 660</td><td>nothing (random split, seed 2027), the role of existing benchmarks</td></tr>
-          <tr><td><b>B2</b> deeper defects</td><td class="has-text-right">2,789 / 376 / 1,234</td><td>test shells have their deepest defect above 2.35 t</td></tr>
-          <tr><td><b>B3</b> sparse to dense</td><td class="has-text-right">1,934 / 265 / 2,200</td><td>train on sparse shells, test on dense shells, where defects interact</td></tr>
+          <tr><td><b>B1</b> within distribution</td><td class="has-text-right">3,299 / 440 / 660</td><td>nothing (random split, seed 2027). The model has seen shells like the test shells, the role of existing benchmarks</td></tr>
+          <tr><td><b>B2</b> deeper defects</td><td class="has-text-right">2,789 / 376 / 1,234</td><td>the test shells have their deepest defect above 2.35 t, deeper than in training. An intermediate shift</td></tr>
+          <tr><td><b>B3</b> sparse to dense</td><td class="has-text-right">1,934 / 265 / 2,200</td><td>the model sees only shells with far-apart defects and is tested on shells with close defects, where the defects interact. The shift the instability creates</td></tr>
         </tbody>
       </table>
     </div>
@@ -198,6 +252,13 @@ m["kappa_rel_err"], m["buckling_r2"]     # point value and 95% shell-bootstrap i
       <p class="control"><button class="button is-small" data-p="2">B3 sparse to dense</button></p>
     </div>
     <div class="table-container"><table class="table is-fullwidth is-narrow is-hoverable lb" id="lb"></table></div>
+    <p class="help">Click a column header to sort.</p>
+    <details class="full-lb">
+      <summary>Show all models and all metrics (full results tables of the paper)</summary>
+      <div class="table-container"><table class="table is-fullwidth is-narrow is-hoverable lb small" id="lb-full"></table></div>
+      <p class="help">Headline columns carry the 95% shell-bootstrap interval in brackets; the regime columns are the sparse and
+      dense parts of the test set (B3 tests on dense shells only).</p>
+    </details>
     <p class="help">&dagger; reads the list of defects. &lowast; SFNO on a 64&times;128 grid. &Dagger; deepest point of <code>w</code>. div.: diverged.
     Full-mesh models are trained on all 76,805 nodes and scored on the 8,192.</p>
   </div>
@@ -206,22 +267,32 @@ m["kappa_rel_err"], m["buckling_r2"]     # point value and 95% shell-bootstrap i
 <section class="section" id="results">
   <div class="container is-max-desktop">
     <h2 class="title is-3">Results</h2>
-    <h3 class="title is-5">Accuracy falls from B1 to B3</h3>
-    <figure class="image"><img src="static/images/ladder.png" alt="Results across the three protocols"></figure>
+    <h3 class="title is-5">Within distribution every model looks good; from sparse to dense they all lose to the mean</h3>
+    <div class="field has-addons" id="ladder-tabs">
+      <p class="control"><button class="button is-small is-dark" data-m="buckling_r2">buckling R&sup2;</button></p>
+      <p class="control"><button class="button is-small" data-m="kappa_mre">MRE &kappa; [%]</button></p>
+      <p class="control"><button class="button is-small" data-m="clear_site">clear-site accuracy</button></p>
+      <p class="control"><button class="button is-small" data-m="near_tie">near-tie winner rate</button></p>
+    </div>
+    <div class="notification howto"><b>How to read this.</b> Each line is one model, from B1 (left) to B3 (right). The dashed
+    line is the training mean, a constant prediction of the average training shell. On B1 every geometry model sits far above
+    it; on B3 they all fall below it on the field, and the model that is best on B1 (FigConvNet) is the worst on B3.</div>
+    <div id="plot-ladder" class="plot plot-wide"></div>
+    <figure class="image mt-3"><img src="static/images/ladder.png" alt="Results across the three protocols"></figure>
     <div class="content"><p>On B1 the geometry models approach the solver's own resolution. With deeper defects (B2) they
     keep the field and lose the failure site where defects interact. From sparse to dense (B3) every geometry model falls
     below the training mean on the field, and the ranking of the models inverts.</p></div>
-    <h3 class="title is-5">Why the predictions degrade</h3>
+    <h3 class="title is-5">Why: the models learn that collapse starts at the deepest defect</h3>
     <div class="content"><p>Collapse starts at the deepest defect on all 94 sparse B1 test shells with a clear winner, so a
     model trained on sparse shells can learn that shortcut. It holds on only 38% of the clear winners among dense shells,
     because neighbouring defects buckle together. A sharp deflection at the wrong defect adds error twice, so the sharp
     prediction loses to the smooth mean.</p></div>
-    <h3 class="title is-5">One pair of defects moved closer</h3>
+    <h3 class="title is-5">One pair moves from 25&deg; to 10&deg;: the load drops 14%, the models see almost nothing</h3>
     <figure class="image"><img src="static/images/intervention.png" alt="Intervention test P3"></figure>
     <div class="content"><p>Moving one pair of defects from 25&deg; to 10&deg; lowers &kappa; by 14% (median over 100 shells)
     and moves the failure site between the two defects on 97% of the shells. Models trained on B1 predict changes between
     &minus;1.1% and +0.3%.</p></div>
-    <h3 class="title is-5">Few-shot adaptation</h3>
+    <h3 class="title is-5">Five dense shells repair the field, not the near-tie decision</h3>
     <figure class="image"><img src="static/images/fewshot.png" alt="Few-shot adaptation on B3"></figure>
     <div class="content"><p>Five dense shells recover most of the field of FigConvNet and the Transformer; the near-tie
     winner rate stays between 46% and 52% at every k.</p></div>

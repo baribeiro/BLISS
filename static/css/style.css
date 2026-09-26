@@ -30,3 +30,25 @@ figcaption { font-size: 0.9rem; color: var(--muted); margin-top: 0.3rem; }
 .tabs.is-toggle li.is-active a { background: var(--navy); border-color: var(--navy); }
 #lb-tabs .button.is-dark { background: var(--navy); }
 @media (max-width: 768px) { .plot { height: 300px; } .publication-title { font-size: 1.5rem !important; } }
+.shift-grid { display: grid; grid-template-columns: 110px repeat(7, 1fr); gap: 6px; align-items: center; }
+.shift-grid .rowlab { font-weight: 700; color: var(--navy); font-size: 0.85rem; text-align: right; padding-right: 6px; }
+.shift-grid .collab { font-weight: 600; color: var(--navy2); font-size: 0.8rem; text-align: center; }
+.panel-c { position: relative; background: #fff; border-radius: 6px; box-shadow: 0 1px 3px rgba(28,43,74,0.15); padding: 4px; }
+.panel-c canvas { width: 100%; height: auto; display: block; }
+.panel-c .cap { font-size: 0.72rem; text-align: center; color: var(--ink); line-height: 1.2; margin-top: 2px; }
+.panel-c .cap .ok { color: #2e7d32; font-weight: 700; }
+.panel-c .cap .bad { color: var(--red); font-weight: 700; }
+.shift-truth { display: grid; grid-template-columns: 110px 1fr; gap: 6px; align-items: center; margin: 0.8rem 0; }
+.shift-truth .panel-c { max-width: 190px; }
+.plot-wide { height: 420px; }
+details.full-lb summary { cursor: pointer; color: var(--navy); font-weight: 600; margin: 0.8rem 0; }
+table.lb.small { font-size: 0.78rem; }
+table.lb th.sortable { cursor: pointer; user-select: none; }
+table.lb th.sortable:hover { color: var(--red); }
+#shift-shells .button.is-selected { background: var(--navy); color: #fff; border-color: var(--navy); }
+@media (max-width: 1000px) { .shift-grid { grid-template-columns: 70px repeat(7, minmax(60px, 1fr)); overflow-x: auto; } }
+.ci { color: #8a8f98; font-size: 0.85em; }
+.story { height: 100%; border-top: 4px solid var(--red); }
+.story-n { font-size: 1.8rem; font-weight: 800; color: var(--red); line-height: 1; }
+.story-h { font-weight: 700; color: var(--navy); margin: 0.3rem 0 0.5rem; }
+.notification.howto { background: #eef2f8; border-left: 4px solid var(--navy); color: var(--ink); font-size: 0.95rem; }

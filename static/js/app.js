@@ -48,9 +48,9 @@ function drawLeaderboard(p) {
 
 document.querySelectorAll("#lb-tabs button").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("#lb-tabs button").forEach(x => x.classList.remove("is-dark"));
-  b.classList.add("is-dark"); drawLeaderboard(+b.dataset.p);
+  b.classList.add("is-dark");
 }));
-drawLeaderboard(0);
+
 
 // ----------------------------------------------------------------------------------------------------------------
 // Dataset explorer: shells of the review subset seen from the pole, w and the buckling deviation |D|.
@@ -149,4 +149,143 @@ fetch("static/data/explorer.json").then(r => r.json()).then(d => {
   showP3(0);
   const want = new URLSearchParams(location.search).get("tab");       // ?tab=shells or ?tab=tables opens that view
   if (want) { const li = document.querySelector('#explorer-tabs li[data-mode="' + want + '"]'); if (li) li.click(); }
+});
+
+// ----------------------------------------------------------------------------------------------------------------
+// Sortable Table 2: clicking a header sorts the rows of each group by that column.
+let LB_SORT = { col: -1, dir: 1 }, LB_P = 0;
+function numOf(c) { const v = parseFloat(String(c).replace("−", "-").replace("*", "")); return isNaN(v) ? null : v; }
+function drawLeaderboardSorted(p) {
+  LB_P = p;
+  const t = document.getElementById("lb");
+  let h = "<thead><tr><th>model</th>" + LB_HEAD.map((x, i) => "<th class='has-text-right sortable' data-c='" + i + "'>" + x +
+    (LB_SORT.col === i ? (LB_SORT.dir > 0 ? " ▲" : " ▼") : "") + "</th>").join("") + "</tr></thead><tbody>";
+  let group = null, rows = [];
+  const flush = () => {
+    if (LB_SORT.col >= 0) rows.sort((a, b) => {
+      const x = numOf(a[1][LB_SORT.col]), y = numOf(b[1][LB_SORT.col]);
+      if (x === null) return 1; if (y === null) return -1; return LB_SORT.dir * (x - y);
+    });
+    for (const [name, r] of rows) {
+      h += "<tr><td>" + name + "</td>" + r.map(c => { const best = c.endsWith("*");
+        return "<td class='has-text-right" + (best ? " best" : "") + "'>" + (best ? c.slice(0, -1) : c) + "</td>"; }).join("") + "</tr>";
+    }
+    rows = [];
+  };
+  for (const [name, rs] of LB) {
+    if (rs === null) { flush(); h += "<tr class='group'><td colspan='6'>" + name + "</td></tr>"; continue; }
+    if (rs[p].every(c => c === "")) continue;
+    rows.push([name, rs[p]]);
+  }
+  flush();
+  t.innerHTML = h + "</tbody>";
+  t.querySelectorAll("th.sortable").forEach(th => th.addEventListener("click", () => {
+    const c = +th.dataset.c; LB_SORT = { col: c, dir: LB_SORT.col === c ? -LB_SORT.dir : -1 }; drawLeaderboardSorted(LB_P); drawFull(LB_P);
+  }));
+}
+document.querySelectorAll("#lb-tabs button").forEach(b => b.addEventListener("click", () => { drawLeaderboardSorted(+b.dataset.p); drawFull(+b.dataset.p); }));
+drawLeaderboardSorted(0);
+
+// ----------------------------------------------------------------------------------------------------------------
+// Full results tables and the interactive ladder, from leaderboard.json.
+let FULL = null;
+const FULL_HEAD = { kappa_mre: "MRE κ [%]", kappa_r2: "κ R²", unconservative: "unconserv.", buckling_r2: "buckling R²",
+  field_r2: "field R²", defect_r2: "defect-region R²", rmse: "RMSE [mm]", rmse_noshrink: "RMSE w/o shrink",
+  rel_l2: "rel. L² mean/median", rel_l2_noshrink: "rel. L² w/o shrink", clear_site: "clear site", near_tie: "near-tie winner",
+  sparse_kappa: "sparse κ err", sparse_r2: "sparse bkl. R²", dense_kappa: "dense κ err", dense_r2: "dense bkl. R²" };
+function fmtCell(c) {
+  if (typeof c === "string") return c;
+  if (c.length === 3) return c[0] + " <span class='ci'>[" + c[1] + ", " + c[2] + "]</span>";
+  return String(c[0]);
+}
+function drawFull(p) {
+  if (!FULL) return;
+  const prot = ["B1", "B2", "B3"][p], rows = FULL.protocols[prot];
+  const cols = FULL.columns.filter(c => rows.some(r => r.cells[c] !== undefined));
+  let h = "<thead><tr><th>model</th>" + cols.map(c => "<th class='has-text-right'>" + FULL_HEAD[c] + "</th>").join("") + "</tr></thead><tbody>";
+  let g = null;
+  for (const r of rows) {
+    if (r.group !== g) { g = r.group; h += "<tr class='group'><td colspan='" + (cols.length + 1) + "'>" + g + "</td></tr>"; }
+    h += "<tr><td>" + r.name + "</td>" + cols.map(c => "<td class='has-text-right'>" + (r.cells[c] === undefined ? "" : fmtCell(r.cells[c])) + "</td>").join("") + "</tr>";
+  }
+  document.getElementById("lb-full").innerHTML = h + "</tbody>";
+}
+const LADDER_COL = { "FigConvNet": "#1c2b4a", "MeshGraphNet": "#294366", "SFNO": "#b02c27", "Transformer": "#e07a5f",
+  "Transolver": "#5b8def", "DeepONet": "#7a1f1b", "MLP-20": "#8a8f98", "MLP-80": "#b7bcc5" };
+function drawLadder(metric) {
+  if (!FULL) return;
+  const P = ["B1", "B2", "B3"], traces = [];
+  const names = FULL.protocols.B1.filter(r => r.group === "learned field models" || r.name.startsWith("MLP")).map(r => r.name);
+  for (const n of names) {
+    const ys = P.map(p => { const r = FULL.protocols[p].find(x => x.name === n); const c = r && r.cells[metric];
+      return (c && typeof c !== "string") ? c[0] * ((metric === "clear_site" || metric === "near_tie") ? 100 : 1) : null; });
+    if (ys.every(v => v === null)) continue;
+    const short = n.split(" (")[0].replace("\n", " ");
+    traces.push({ x: ["B1 within distribution", "B2 deeper defects", "B3 sparse to dense"], y: ys, mode: "lines+markers", name: short,
+      line: { width: 3, color: LADDER_COL[short] || "#999" }, marker: { size: 9 } });
+  }
+  const ref = FULL.protocols.B1.find(r => r.name === "training mean");
+  const refy = P.map(p => { const c = FULL.protocols[p].find(r => r.name === "training mean").cells[metric]; return (c && typeof c !== "string") ? c[0] * ((metric === "clear_site" || metric === "near_tie") ? 100 : 1) : null; });
+  traces.push({ x: ["B1 within distribution", "B2 deeper defects", "B3 sparse to dense"], y: refy, mode: "lines", name: "training mean",
+    line: { dash: "dash", color: "#555", width: 2 } });
+  const ylab = { buckling_r2: "buckling R²", kappa_mre: "median relative error of κ [%]", clear_site: "clear-site accuracy [%]", near_tie: "near-tie winner rate [%]" }[metric];
+  Plotly.react("plot-ladder", traces, { margin: { l: 60, r: 10, t: 10, b: 40 }, yaxis: { title: ylab, type: metric === "kappa_mre" ? "log" : "linear" },
+    legend: { orientation: "h", y: -0.18 }, plot_bgcolor: "rgba(0,0,0,0)", paper_bgcolor: "rgba(0,0,0,0)" }, { displayModeBar: false, responsive: true });
+}
+document.querySelectorAll("#ladder-tabs button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("#ladder-tabs button").forEach(x => x.classList.remove("is-dark")); b.classList.add("is-dark"); drawLadder(b.dataset.m);
+}));
+fetch("static/data/leaderboard.json").then(r => r.json()).then(d => { FULL = d; drawFull(0); drawLadder("buckling_r2"); });
+
+// ----------------------------------------------------------------------------------------------------------------
+// See the shift: the same dense shell predicted by each model trained on B1 and on B3, drawn on canvases.
+let PR = null;
+function ramp(t) {   // white -> salmon -> dark red
+  t = Math.max(0, Math.min(1, t));
+  const a = [247, 243, 242], b = [224, 122, 95], c = [122, 31, 27];
+  const [p, q, u] = t < 0.5 ? [a, b, t / 0.5] : [b, c, (t - 0.5) / 0.5];
+  return "rgb(" + p.map((v, i) => Math.round(v + (q[i] - v) * u)).join(",") + ")";
+}
+function paint(canvas, d, vmax, site, trueSite) {
+  const W = 220, ctx = canvas.getContext("2d"); canvas.width = W; canvas.height = W;
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, W);
+  const X = PR.x, Y = PR.y, s = W / 2 - 6;
+  const order = d.map((v, i) => i).sort((i, j) => d[i] - d[j]);
+  for (const i of order) { ctx.fillStyle = ramp(d[i] / vmax); ctx.fillRect(W / 2 + X[i] * s - 1.2, W / 2 - Y[i] * s - 1.2, 2.4, 2.4); }
+  const mark = (i, kind) => {
+    const x = W / 2 + X[i] * s, y = W / 2 - Y[i] * s; ctx.lineWidth = 2.5; ctx.strokeStyle = "#1c2b4a";
+    if (kind === "o") { ctx.beginPath(); ctx.arc(x, y, 9, 0, 2 * Math.PI); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.moveTo(x - 7, y - 7); ctx.lineTo(x + 7, y + 7); ctx.moveTo(x + 7, y - 7); ctx.lineTo(x - 7, y + 7); ctx.stroke(); }
+  };
+  mark(trueSite, "x"); if (site !== null) mark(site, "o");
+}
+function angDeg(i, j) {
+  const zi = Math.sqrt(Math.max(0, 1 - PR.x[i] ** 2 - PR.y[i] ** 2)), zj = Math.sqrt(Math.max(0, 1 - PR.x[j] ** 2 - PR.y[j] ** 2));
+  return Math.acos(Math.max(-1, Math.min(1, PR.x[i] * PR.x[j] + PR.y[i] * PR.y[j] + zi * zj))) * 180 / Math.PI;
+}
+function showShift(k) {
+  const sh = PR.shells[k], vmax = Math.max(...sh.truth.d);
+  document.querySelectorAll("#shift-shells .button").forEach((b, i) => b.classList.toggle("is-selected", i === k));
+  const truth = document.getElementById("shift-truth");
+  truth.innerHTML = "<div class='rowlab'>solver</div><div class='panel-c'><canvas></canvas><div class='cap'>κ = " + sh.truth.kappa.toFixed(3) + "</div></div>";
+  paint(truth.querySelector("canvas"), sh.truth.d, vmax, null, sh.truth.site);
+  const g = document.getElementById("shift-grid"); g.innerHTML = "<div></div>" + PR.models.map(m => "<div class='collab'>" + m + "</div>").join("");
+  for (const prot of ["B1", "B3"]) {
+    g.insertAdjacentHTML("beforeend", "<div class='rowlab'>trained on " + prot + "<br><span style='font-weight:400'>" +
+      (prot === "B1" ? "dense shells seen" : "sparse shells only") + "</span></div>");
+    for (const m of PR.models) {
+      const r = sh.models[m][prot], a = angDeg(r.site, sh.truth.site), ok = a < 10;
+      const err = 100 * (r.kappa - sh.truth.kappa) / sh.truth.kappa, div = !isFinite(err) || Math.abs(err) > 1000;
+      g.insertAdjacentHTML("beforeend", "<div class='panel-c'><canvas></canvas><div class='cap'>" + (div ? "<span class='bad'>diverged</span><br>&nbsp;" :
+        "<span class='" + (ok ? "ok" : "bad") + "'>site " + (ok ? "✓" : "off by " + a.toFixed(0) + "°") + "</span><br>κ " +
+        (err >= 0 ? "+" : "") + err.toFixed(1) + "%") + "</div></div>");
+      paint(g.lastElementChild.querySelector("canvas"), r.d, vmax, r.site, sh.truth.site);
+    }
+  }
+}
+fetch("static/data/predictions.json").then(r => r.json()).then(d => {
+  PR = d; const bs = document.getElementById("shift-shells");
+  d.shells.forEach((s, i) => { const b = document.createElement("button"); b.className = "button is-small"; b.textContent = "dense shell " + s.id;
+    b.addEventListener("click", () => showShift(i)); bs.appendChild(b); });
+  showShift(0);
 });
