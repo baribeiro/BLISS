@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
   <script>window.BLISS_EMBED = true;</script>
+  <!-- On the anonymized mirror the page runs sandboxed and cannot fetch its data files: open the embedded-data copy -->
+  <script>if (!window.BLISS_EMBED && location.hostname.endsWith("anonymous.4open.science")) location.replace(location.pathname.replace(/\/?(index\.html)?$/, "/review/index.html"));</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BLISS: A Dataset and Benchmark for the Buckling of Imperfect Spherical Shells</title>
