@@ -36,7 +36,7 @@
           <span class="icon"><i class="fas fa-database"></i></span><span>Data</span>
         </a>
         <a href="#start" class="button is-rounded is-dark">
-          <span class="icon"><i class="fas fa-download"></i></span><span>Get started</span>
+          <span class="icon"><i class="fas fa-download"></i></span><span>Load the data</span>
         </a>
         <a href="#explorer" class="button is-rounded is-dark">
           <span class="icon"><i class="fas fa-cube"></i></span><span>Dataset explorer</span>
@@ -208,17 +208,35 @@
 <!-- ============ GET STARTED ============ -->
 <section class="section" id="start">
   <div class="container is-max-desktop">
-    <h2 class="title is-3"><span class="icon"><i class="fas fa-download"></i></span>Get Started</h2>
-<pre><code>import bliss
-d = bliss.load("BLISS-1.0")              # the release, or the review subset
-train, val, test = d.split("B1")
-s = d[test[0]]
-s.w, s.U, s.kappa, s.q                   # input, field target, scalar target, site ratio
+    <h2 class="title is-3"><span class="icon"><i class="fas fa-download"></i></span>Load the Data</h2>
+    <p class="subtitle is-6">Every shell is one <code>.npz</code> file on the shared mesh, so it is read with NumPy alone. The
+    benchmark code wraps this in the <code>bliss</code> package, with the three protocols and the scorer.</p>
+    <div class="columns">
+      <div class="column">
+        <pre><code># one shell with NumPy
+import numpy as np
 
+mesh = np.load("BLISS-1.0/shared.npz")
+P, conn = mesh["P"], mesh["conn"]   # (76805, 3) node directions, (76354, 4) S4R
+s = np.load("BLISS-1.0/canonical/2384.npz")
+w = s["w"]                          # (76805,) surface deviation, the input
+U = s["U_peak"]                     # (76805, 3) displacement at the peak
+s["kappa"], s["q"], s["lpf"]        # knockdown, site ratio, load path</code></pre>
+      </div>
+      <div class="column">
+        <pre><code># with the benchmark loader
+import bliss
 from bliss.metrics import score_ci
-m = score_ci("outputs/figconv_v2random_test_pred.npz")["metrics"]
-m["kappa_rel_err"], m["buckling_r2"]     # point value and 95% shell-bootstrap interval</code></pre>
-    <p class="how">Install, data layout and the commands that reproduce every result are in the README of the code.</p>
+
+d = bliss.load("BLISS-1.0")
+train, val, test = d.split("B1")    # also "B2", "B3"
+s = d[test[0]]
+s.w, s.U, s.kappa                   # input, field and scalar targets
+s.defects                           # (n, 4) depth, width, theta, phi
+score_ci("preds.npz")["metrics"]    # every metric of the paper</code></pre>
+      </div>
+    </div>
+    <p class="how">Install and the commands that reproduce every result are in the README of the code.</p>
   </div>
 </section>
 
