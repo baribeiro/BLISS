@@ -60,23 +60,23 @@
     <div class="highlights">
       <div class="box has-text-centered highlight">
         <p class="title is-3" style="color:#b02c27;">8,528</p>
-        <p class="subtitle is-6">imperfect hemispherical shells simulated with finite elements until collapse</p>
+        <p class="subtitle is-6">shells simulated until collapse</p>
       </div>
       <div class="box has-text-centered highlight">
         <p class="title is-3" style="color:#294366;">0.985</p>
-        <p class="subtitle is-6">buckling R&sup2; of the best model within distribution (B1), with 98% of clear failure sites found</p>
+        <p class="subtitle is-6">buckling R&sup2; of the best model within distribution (B1)</p>
       </div>
       <div class="box has-text-centered highlight">
         <p class="title is-3" style="color:#b02c27;">&lt; mean</p>
-        <p class="subtitle is-6">from sparse to dense shells (B3), every geometry model scores below the average training shell</p>
+        <p class="subtitle is-6">every geometry model on B3 falls below the training mean</p>
       </div>
       <div class="box has-text-centered highlight">
         <p class="title is-3" style="color:#294366;">&minus;14%</p>
-        <p class="subtitle is-6">median drop of &kappa; when one pair of defects moves from 25&deg; to 10&deg;; models predict &minus;1.1 to +0.3%</p>
+        <p class="subtitle is-6">load drop when one pair moves 25&deg; &rarr; 10&deg;; models see ~0%</p>
       </div>
       <div class="box has-text-centered highlight">
         <p class="title is-3" style="color:#b02c27;">~50%</p>
-        <p class="subtitle is-6">near-tie winner rate after five dense examples: the field is repaired, the decision is not</p>
+        <p class="subtitle is-6">near-tie decision after few-shot adaptation: chance</p>
       </div>
     </div>
   </div>
@@ -171,10 +171,6 @@
         <div class="control"><button class="button is-small is-dark" id="shell-go">find</button></div></div></div>
     </div>
     <div class="columns">
-      <div class="column is-5">
-        <div id="plot-cat" class="plot plot-short"></div>
-        <div class="table-container" style="max-height:300px;"><table class="table is-fullwidth is-narrow is-hoverable data lb" id="cat-table"></table></div>
-      </div>
       <div class="column is-7">
         <div class="field is-grouped is-grouped-multiline controls-3d">
           <div class="control"><div class="buttons has-addons" id="mode3d">
@@ -184,11 +180,23 @@
           <div class="control exag"><label class="label is-small">exaggeration &times;<span id="exag-lab"></span></label>
             <input id="exag" class="slider" type="range" min="1" max="40" step="1" value="10"></div>
         </div>
-        <div id="plot-3d" class="plot plot-tall"></div>
+        <div id="plot-3d" class="plot" style="height:430px;"></div>
         <p class="how" id="view-how"></p>
-        <div id="plot-lpf" class="plot plot-short"></div>
-        <dl class="sim-card" id="sim-card"></dl>
-        <div class="table-container"><table class="table is-narrow data" id="defect-table"></table></div>
+      </div>
+      <div class="column is-5">
+        <dl class="sim-card" id="sim-card" style="grid-template-columns: repeat(2, 1fr);"></dl>
+        <div id="plot-lpf" class="plot" style="height:190px;"></div>
+        <div class="table-container"><table class="table is-narrow is-fullwidth data" id="defect-table"></table></div>
+      </div>
+    </div>
+    <div class="columns">
+      <div class="column is-6">
+        <div id="plot-cat" class="plot" style="height:300px;"></div>
+        <p class="how">The family in its parameter space; the selected shell is outlined. Click a point to open it.</p>
+      </div>
+      <div class="column is-6">
+        <div class="table-container" style="max-height:300px;"><table class="table is-fullwidth is-narrow is-hoverable data lb" id="cat-table"></table></div>
+        <p class="how">Click a row to open the shell.</p>
       </div>
     </div>
   </div>

@@ -32,7 +32,7 @@ function axis(title, extra = {}) {
   return Object.assign({ title: { text: title, font: { size: 12, color: T.ink } }, gridcolor: T.line,
     zerolinecolor: T.line, linecolor: T.line, tickfont: { color: T.ink3 } }, extra);
 }
-const PLOT_CFG = { displaylogo: false, responsive: true, modeBarButtonsToRemove: ["lasso2d", "select2d"] };
+const PLOT_CFG = { displaylogo: false, responsive: true, displayModeBar: false };
 function render(id, traces, layout) {
   const el = document.getElementById(id);
   if (el && window.Plotly) Plotly.react(el, traces, layout, PLOT_CFG);
@@ -96,7 +96,7 @@ function deviationNodes(s, key = "u") {
 }
 function scene3d() {
   const ax = { visible: false, showbackground: false };
-  return { xaxis: ax, yaxis: ax, zaxis: ax, aspectmode: "data", camera: { eye: { x: 1.2, y: -1.2, z: 1.05 } } };
+  return { xaxis: ax, yaxis: ax, zaxis: ax, aspectmode: "data", camera: { eye: { x: 1.15, y: -1.15, z: 0.7 }, center: { x: 0, y: 0, z: -0.12 } } };
 }
 function drawShell() {
   const rec = state.sel; if (!rec) return;
