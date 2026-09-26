@@ -88,7 +88,7 @@
 <!-- ============ ABSTRACT ============ -->
 <section class="section hero is-light" id="abstract">
   <div class="container is-max-desktop">
-    <h2 class="title is-3">Abstract</h2>
+    <h2 class="title is-3"><span class="icon"><i class="fas fa-file-lines"></i></span>Abstract</h2>
     <div class="content has-text-justified">
       <p>Machine-learning surrogates are increasingly used to predict how a structure responds to its geometry. However,
       existing scientific-ML benchmarks rarely use a change in the physical mechanism itself as the source of a distribution
@@ -111,7 +111,7 @@
 <!-- ============ DATASET ============ -->
 <section class="section" id="dataset">
   <div class="container is-max-desktop">
-    <h2 class="title is-3">Dataset</h2>
+    <h2 class="title is-3"><span class="icon"><i class="fas fa-database"></i></span>Dataset</h2>
     <div class="content has-text-justified">
       <p>Thin shells, such as pressure vessels and launch vehicles, collapse by an instability, and a defect as deep as the
       wall thickness can halve the pressure a shell carries. When the defects of a shell are far apart (<b>sparse</b>), each
@@ -164,14 +164,13 @@
 <!-- ============ DATASET EXPLORER ============ -->
 <section class="section hero is-light" id="explorer">
   <div class="container is-max-desktop">
-    <h2 class="title is-3">Dataset Explorer</h2>
-    <p class="how">Every shell of the review subset. Pick a family of shells, then a shell in the list. The shell is drawn from
-    its list of defects with the generator of the dataset; for shells with fields, switch to the shape at collapse.</p>
-    <div class="field is-grouped is-grouped-multiline" style="align-items:center;">
-      <div class="control"><div class="buttons has-addons" id="cat-tabs" style="margin-bottom:0"></div></div>
-      <div class="control"><div class="field has-addons">
-        <div class="control"><input class="input is-small" id="shell-find" type="text" placeholder="shell id, e.g. 6337" style="width:150px"></div>
-        <div class="control"><button class="button is-small is-dark" id="shell-go">find</button></div></div></div>
+    <h2 class="title is-3"><span class="icon"><i class="fas fa-cube"></i></span>Dataset Explorer</h2>
+    <p class="how">The shells of the review subset that carry the full simulation. Pick a family, then a shell in the list or in
+    the parameter plot. The shell is drawn from its list of defects with the generator of the dataset; switch to the shape at
+    collapse and after it, and follow the load path of the simulation.</p>
+    <div class="explorer-bar">
+      <div class="buttons has-addons" id="cat-tabs"></div>
+      <div class="select is-small"><select id="shell-pick" aria-label="choose a shell"></select></div>
     </div>
     <div class="columns">
       <div class="column is-7">
@@ -202,13 +201,14 @@
         <p class="how">Click a row to open the shell.</p>
       </div>
     </div>
+
   </div>
 </section>
 
 <!-- ============ GET STARTED ============ -->
 <section class="section" id="start">
   <div class="container is-max-desktop">
-    <h2 class="title is-3">Get Started</h2>
+    <h2 class="title is-3"><span class="icon"><i class="fas fa-download"></i></span>Get Started</h2>
 <pre><code>import bliss
 d = bliss.load("BLISS-1.0")              # the release, or the review subset
 train, val, test = d.split("B1")
@@ -225,7 +225,7 @@ m["kappa_rel_err"], m["buckling_r2"]     # point value and 95% shell-bootstrap i
 <!-- ============ PROTOCOL ============ -->
 <section class="section hero is-light" id="protocol">
   <div class="container is-max-desktop">
-    <h2 class="title is-3">Benchmark Protocol</h2>
+    <h2 class="title is-3"><span class="icon"><i class="fas fa-list-check"></i></span>Benchmark Protocol</h2>
     <div class="content"><p>From the surface deviation <code>w</code>, predict &kappa;, the displacement field at the peak load and
     the failure site. Six geometry models read <code>w</code>; twenty models read the list of defects instead; references need
     no training. Every learned model is the mean of three seeds, with hyperparameters searched on B1 and frozen for B2 and B3.</p></div>
@@ -251,7 +251,7 @@ m["kappa_rel_err"], m["buckling_r2"]     # point value and 95% shell-bootstrap i
 <!-- ============ LEADERBOARD ============ -->
 <section class="section" id="leaderboard">
   <div class="container is-max-desktop">
-    <h2 class="title is-3">Leaderboard</h2>
+    <h2 class="title is-3"><span class="icon"><i class="fas fa-trophy"></i></span>Leaderboard</h2>
     <div class="buttons has-addons" id="lb-tabs">
       <button class="button is-small is-selected" data-p="0">B1 within distribution</button>
       <button class="button is-small" data-p="1">B2 deeper defects</button>
@@ -286,7 +286,7 @@ m["kappa_rel_err"], m["buckling_r2"]     # point value and 95% shell-bootstrap i
 <!-- ============ RESULTS ============ -->
 <section class="section hero is-light" id="results">
   <div class="container is-max-desktop">
-    <h2 class="title is-3">Results</h2>
+    <h2 class="title is-3"><span class="icon"><i class="fas fa-chart-line"></i></span>Results</h2>
 
     <div class="result-block">
       <p class="result-tag">B1 &rarr; B2 &rarr; B3 &middot; three protocols</p>
@@ -348,28 +348,11 @@ m["kappa_rel_err"], m["buckling_r2"]     # point value and 95% shell-bootstrap i
 </section>
 
 <!-- ============ MORE RESULTS ============ -->
-<section class="section" id="more">
-  <div class="container is-max-desktop">
-    <h2 class="title is-3">More Results from the Paper</h2>
-    <div class="columns is-multiline">
-      <div class="column is-full"><figure><img src="static/images/ladder.png" alt="Results across the three protocols"></figure>
-        <p class="how">Results across the three protocols, with the solver's own resolution (grey band) and the full-mesh models.</p></div>
-      <div class="column is-full"><figure><img src="static/images/field_examples.png" alt="Field reconstructions"></figure>
-        <p class="how">Field reconstructions and error maps of every model on B1, B2 and B3.</p></div>
-      <div class="column is-half"><figure><img src="static/images/validation.png" alt="Experimental validation"></figure>
-        <p class="how">Simulated against measured collapse load of eight scanned specimens.</p></div>
-      <div class="column is-half"><figure><img src="static/images/stats_q.png" alt="Dataset statistics"></figure>
-        <p class="how">Knockdown factor, site ratio q and defect spacing of the core shells.</p></div>
-      <div class="column is-full"><figure><img src="static/images/sweeps.png" alt="Intervention tests"></figure>
-        <p class="how">The intervention tests P1 to P4 in the solver.</p></div>
-    </div>
-  </div>
-</section>
 
 <!-- ============ SCOPE ============ -->
 <section class="section hero is-light" id="scope">
   <div class="container is-max-desktop">
-    <h2 class="title is-3">Scope and Future Work</h2>
+    <h2 class="title is-3"><span class="icon"><i class="fas fa-compass"></i></span>Scope and Future Work</h2>
     <div class="content"><p>By holding the shell family and load case fixed, BLISS is designed to isolate geometry-induced changes
     in the instability mechanism, so that changes in model performance can be attributed more directly to geometry. Extending
     this controlled setting to other structures and loads, and learning the near-tie decision, are the next steps.</p></div>
@@ -379,14 +362,14 @@ m["kappa_rel_err"], m["buckling_r2"]     # point value and 95% shell-bootstrap i
 <!-- ============ RESOURCES ============ -->
 <section class="section" id="resources">
   <div class="container is-max-desktop">
-    <h2 class="title is-3">Resources</h2>
+    <h2 class="title is-3"><span class="icon"><i class="fas fa-code"></i></span>Resources</h2>
     <div class="content"><ul>
       <li><b>Data</b>: the review subset on OSF (link above); the full release of 8,528 shells is available to reviewers on
       request and will be public at publication, under CC BY 4.0.</li>
       <li><b>Code</b>: the loader, the scorer, the eight field models with one training recipe, the search, the models on the list
       of defects, the references, the intervention tests and the results tables, under MIT (anonymized repository).</li>
     </ul></div>
-    <h2 class="title is-3">Citation</h2>
+    <h2 class="title is-3"><span class="icon"><i class="fas fa-quote-right"></i></span>Citation</h2>
 <pre><code>@inproceedings{bliss2027,
   title     = {BLISS: A Dataset and Benchmark for the Buckling of Imperfect Spherical Shells},
   author    = {Anonymous},

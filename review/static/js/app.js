@@ -50,9 +50,6 @@ function selectButton(groupId, btn) {
 const CATS = [
   { key: "sparse", label: "Multi-defect, sparse", fields: true },
   { key: "dense", label: "Multi-defect, dense", fields: true },
-  { key: "p3", label: "Two defects moving closer (P3)", fields: true },
-  { key: "double", label: "Two-defect", fields: false },
-  { key: "single", label: "Single-defect", fields: false },
 ];
 const state = { grid: null, geo: null, cat: null, shells: {}, catKey: "dense", sel: null, mode: "geom", exag: 10 };
 
@@ -210,14 +207,16 @@ function drawCatTable() {
   $("cat-table").querySelectorAll("tbody tr").forEach(tr => tr.addEventListener("click", () => selectShell(L.find(r => r.id === +tr.dataset.id))));
 }
 function selectShell(rec) {
-  state.sel = rec; drawCatPlot(); drawCatTable(); drawCard(); drawShell();
+  state.sel = rec; $("shell-pick").value = String(rec.id); drawCatPlot(); drawCatTable(); drawCard(); drawShell();
 }
 function selectCat(key) {
   state.catKey = key;
   document.querySelectorAll("#cat-tabs .button").forEach(b => b.classList.toggle("is-selected", b.dataset.k === key));
   const cat = CATS.find(c => c.key === key), cb = document.querySelector("#mode3d .button[data-v='collapse']");
   cb.disabled = !cat.fields; if (!cat.fields && state.mode === "collapse") { state.mode = "geom"; selectButton("mode3d", document.querySelector("#mode3d .button[data-v='geom']")); }
-  const L = items(key), pick = key === "dense" ? L.find(r => r.id === 6337) : key === "p3" ? L.find(r => r.source === 3890 && +r.spacing === 10) : null;
+  const L = items(key);
+  $("shell-pick").innerHTML = L.map(r => `<option value="${r.id}">shell ${r.id} · ${r.n} defects · κ = ${r.kappa.toFixed(3)} · q = ${r.q.toFixed(2)}</option>`).join("");
+  const pick = key === "dense" ? L.find(r => r.id === 6337) : key === "p3" ? L.find(r => r.source === 3890 && +r.spacing === 10) : null;
   selectShell(pick || L[0]);
 }
 function initExplorer() {
@@ -228,10 +227,7 @@ function initExplorer() {
     if (b.disabled) return; selectButton("mode3d", b); state.mode = b.dataset.v; drawShell(); }));
   $("exag").addEventListener("input", e => { state.exag = +e.target.value; $("exag-lab").textContent = state.exag; drawShell(); });
   $("exag-lab").textContent = state.exag;
-  const find = () => { const id = +$("shell-find").value.trim();
-    for (const c of CATS) { const r = items(c.key).find(q => q.id === id); if (r) { selectCat(c.key); selectShell(r); return; } }
-    $("shell-find").classList.add("is-danger"); setTimeout(() => $("shell-find").classList.remove("is-danger"), 1200); };
-  $("shell-go").addEventListener("click", find); $("shell-find").addEventListener("keydown", e => { if (e.key === "Enter") find(); });
+  $("shell-pick").addEventListener("change", e => { const r = items(state.catKey).find(q => q.id === +e.target.value); if (r) selectShell(r); });
   selectCat("dense");
 }
 
