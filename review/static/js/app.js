@@ -38,7 +38,15 @@ function render(id, traces, layout) {
   if (el && window.Plotly) Plotly.react(el, traces, layout, PLOT_CFG);
 }
 const $ = (id) => document.getElementById(id);
-const getJSON = (f) => fetch("static/data/" + f).then(r => r.json());
+// The anonymized copy (review/) embeds each data file as a script, since it is served without fetch() of JSON
+const getJSON = (f) => !window.BLISS_EMBED ? fetch("static/data/" + f).then(r => r.json()) : new Promise((ok, fail) => {
+  const D = (window.BLISS_DATA = window.BLISS_DATA || {});
+  if (f in D) return ok(D[f]);
+  const s = document.createElement("script");
+  s.src = "static/data/" + f.replace(/\.json$/, ".js");
+  s.onload = () => ok(D[f]); s.onerror = fail;
+  document.head.appendChild(s);
+});
 function selectButton(groupId, btn) {
   document.querySelectorAll("#" + groupId + " .button").forEach(b => b.classList.remove("is-selected"));
   btn.classList.add("is-selected");
