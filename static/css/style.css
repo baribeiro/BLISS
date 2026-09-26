@@ -204,3 +204,9 @@ table#lb tbody tr { cursor: pointer; } table#lb tbody tr.sel td { background: #e
 .explorer-bar #cat-tabs { margin-bottom: 0; }
 .explorer-bar .select select { font-size: 0.8rem; min-width: 280px; }
 h2.title .icon { margin-right: 0.45rem; color: #294366; font-size: 0.8em; vertical-align: 0.05em; }
+/* Load the Data: code blocks stay inside their column */
+#start .column { min-width: 0; }
+#start pre { font-size: 0.72rem; overflow-x: auto; white-space: pre; }
+/* Load the Data: the code blocks stacked at full width */
+#start .columns { display: block; margin: 0; }
+#start .column { width: 100%; padding: 0; margin-bottom: 0.9rem; }

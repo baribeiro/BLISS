@@ -218,11 +218,11 @@ python benchmark/data/download.py</code></pre>
 import numpy as np
 
 mesh = np.load("BLISS-1.0/shared.npz")
-P, conn = mesh["P"], mesh["conn"]   # (76805, 3) node directions, (76354, 4) S4R
+P, conn = mesh["P"], mesh["conn"]  # nodes, elements
 s = np.load("BLISS-1.0/canonical/2384.npz")
-w = s["w"]                          # (76805,) surface deviation, the input
-U = s["U_peak"]                     # (76805, 3) displacement at the peak
-s["kappa"], s["q"], s["lpf"]        # knockdown, site ratio, load path</code></pre>
+w = s["w"]         # (76805,) input
+U = s["U_peak"]    # (76805, 3) target
+s["kappa"], s["q"], s["lpf"]  # κ, site ratio, load path</code></pre>
       </div>
       <div class="column">
         <pre><code># with the benchmark loader
@@ -230,11 +230,11 @@ import bliss
 from bliss.metrics import score_ci
 
 d = bliss.load("BLISS-1.0")
-train, val, test = d.split("B1")    # also "B2", "B3"
+train, val, test = d.split("B1")  # or "B2", "B3"
 s = d[test[0]]
-s.w, s.U, s.kappa                   # input, field and scalar targets
-s.defects                           # (n, 4) depth, width, theta, phi
-score_ci("preds.npz")["metrics"]    # every metric of the paper</code></pre>
+s.w, s.U, s.kappa                 # input, targets
+s.defects                         # (n, 4) defects
+score_ci("preds.npz")["metrics"]  # all metrics</code></pre>
       </div>
     </div>
     <p class="how">Install and the commands that reproduce every result are in the README of the code.</p>
