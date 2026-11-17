@@ -415,7 +415,7 @@ def sweep_inputs(ns, C, fam):
     raise SystemExit("unknown family " + fam)
 
 
-def forward(ns, X, net):
+def forward(ns, X, net, bs=8):
     """train.evaluate(), without the scoring: batches of 8, bf16 autocast on cuda, to_nodes, de-normalise.
 
     Parameters
@@ -426,6 +426,8 @@ def forward(ns, X, net):
         Inputs.
     net : torch.nn.Module
         The network with the selected EMA weights.
+    bs : int, default=8
+        Shells per forward pass (8 = train.evaluate(); the outputs per shell do not depend on it).
 
     Returns
     -------
@@ -437,8 +439,8 @@ def forward(ns, X, net):
     import torch
     dev = ns["dev"]; pf, pk = [], []
     with torch.no_grad(), torch.autocast("cuda", dtype=torch.bfloat16, enabled=(dev == "cuda")):
-        for i in range(0, len(X), 8):
-            a, b = net(X[i:i + 8]); pf.append(ns["to_nodes"](a.float()).cpu()); pk.append(b.float().cpu())
+        for i in range(0, len(X), bs):
+            a, b = net(X[i:i + bs]); pf.append(ns["to_nodes"](a.float()).cpu()); pk.append(b.float().cpu())
     return torch.cat(pf).numpy() * ns["us"], torch.cat(pk).numpy() * ns["ks"] + ns["km"]
 
 

@@ -76,12 +76,19 @@ benchmark/                 the pipelines of the paper, one folder per stage (bel
     data/                  training arrays and the table of defects
     field_models/          the eight field models: training, search, confirmation, transfer to B2/B3
     parametric/            the models that read the list of defects
-    references/            the references: shape baselines, site baselines, solver increments
-    analyses/              intervention tests P1-P4 and few-shot adaptation on B3
+    references/            the references: shape baselines, site baselines, solver increments, semi-analytical shell model
+        data/              shell_model_kappa.csv: kappa of the semi-analytical shell model on every test shell
+    analyses/              intervention tests P1-P4, few-shot adaptation on B3, controlled tests on edited shells
+                           (edited_shells.py, count_matched.py, paired_layouts.py, neighbour_probe.py,
+                           site_reweighting.py), ranking.py and label_sensitivity.py
+    cylinders/             the second structural system: prepare_cylinders.py, score_cylinders.py, probe_cylinders.py
     tables/                rescoring of every prediction and the tables of the paper
-configs/                   frozen hyperparameters of the eight field models (winners of the search on B1)
+configs/                   frozen hyperparameters of the eight field models (winners of the search on B1);
+                           cylinders_<family>.json: the same hyperparameters and the run tags for the cylinders
 splits/                    B1.json, B2.json, B3.json: the three protocols of release 1.0 (ids of the 4,399 core shells)
-tests/                     tests of the scorer (pytest)
+    cylinders/             B1.json, B2.json, B3.json: the three protocols of the cylinders
+    analysis/              controlled_tests_dense.json: ids of the dense reference set of the controlled tests
+tests/                     tests of the scorer (test_metrics.py) and of the ranking analyses (test_ranking.py), pytest
 docs/                      logo and overview figure
 pyproject.toml, Makefile, requirements*.txt, constraints.txt, environment.yml, LICENSE
 ```
@@ -105,9 +112,24 @@ repository.
   (`weakest_link.py`).
 - [`benchmark/references/`](./benchmark/references): training mean, kNN, PCA-ridge, gradient boosting and weakest
   link on `w` (`shape_baselines.py`); deepest point, random site and random defect (`site_baselines.py`); the
-  solver's neighbouring increments (`solver_increments.py`).
+  solver's neighbouring increments (`solver_increments.py`); the semi-analytical shell model (`shell_model.py`), a
+  semi-analytical shell model derived from the problem statement without simulation data, with three coefficients calibrated on the knockdown factors of the training shells of each benchmark; released as per-shell
+  predictions (`data/shell_model_kappa.csv`). The script prints its median `kappa` error on B1, B2 and B3
+  and, with `--pred`, compares a model with it on the same shells.
 - [`benchmark/analyses/`](./benchmark/analyses): the intervention tests P1-P4 (`interventions_inputs.py`,
   `interventions_predict.py`, `interventions_score.py`) and few-shot adaptation on B3 (`fewshot.py`).
+  The controlled tests on edited shells that separate defect count, spacing and failure site: `edited_shells.py`
+  predicts prepared arrays of edited shells with the trained models; `count_matched.py` scores dense shells cut to
+  the sparse count (spacing share); `paired_layouts.py` the same defects 10° or 25° apart in one footprint;
+  `neighbour_probe.py` the deepest defect alone, with its neighbours and in the full shell; `site_reweighting.py`
+  the B3 error by failure site and re-weighted to the sparse sites. The edited shells are read as prepared arrays
+  of re-simulated shells, which are part of the data release and are not built by this repository (file names under
+  step 7 below). `ranking.py` compares the order of the model families across protocols; `label_sensitivity.py`
+  scores the families against `kappa` labels solved again under other settings, given as a table.
+- [`benchmark/cylinders/`](./benchmark/cylinders): the second structural system, axially compressed cylinders.
+  `prepare_cylinders.py` builds the 8,192-node training arrays and the splits B1-cyl, B2-cyl and B3-cyl from the
+  per-shell records; `score_cylinders.py` scores the stored test predictions on the three protocols;
+  `probe_cylinders.py` predicts and scores the neighbour probe and the count-matched cut on the cylinder.
 - [`benchmark/tables/`](./benchmark/tables): `rescore.py` rescores every stored prediction with the scorer;
   `main_table.py` and `full_tables.py` write the tables of the paper.
 
@@ -295,12 +317,30 @@ python benchmark/parametric/set_train.py final --arch pairwise --split B1 --targ
 python benchmark/references/shape_baselines.py
 python benchmark/references/site_baselines.py
 python benchmark/references/solver_increments.py
+python benchmark/references/shell_model.py                     # add --pred <file>_test_pred.npz to compare a model
 python benchmark/analyses/interventions_inputs.py
 python benchmark/analyses/interventions_predict.py build
 python benchmark/analyses/interventions_predict.py infer --families figconv,sfno,transformer --seeds 0,1,2
 python benchmark/analyses/interventions_score.py
 python benchmark/analyses/fewshot.py --stage all --models figconv,sfno,transformer
+python benchmark/analyses/ranking.py
+# controlled tests on edited shells (prepared arrays under outputs/edited_shells/, see below)
+python benchmark/analyses/edited_shells.py --sets cut_dense,layout_10deg,layout_25deg --variant b3
+python benchmark/analyses/edited_shells.py --sets nb_dense_full,nb_dense_single,nb_dense_nb,nb_sparse_full,nb_sparse_single --variant b3
+python benchmark/analyses/edited_shells.py --sets nb_dense_full,nb_dense_single,nb_dense_nb,nb_sparse_full,nb_sparse_single --variant n8192
+python benchmark/analyses/count_matched.py
+python benchmark/analyses/paired_layouts.py
+python benchmark/analyses/neighbour_probe.py
+python benchmark/analyses/site_reweighting.py
 ```
+
+The controlled tests read prepared arrays of re-simulated shells, one file per set of edited shells:
+`outputs/edited_shells/cut_dense.npz`, `layout_10deg.npz`, `layout_25deg.npz`, `nb_dense_full.npz`,
+`nb_dense_single.npz`, `nb_dense_nb.npz`, `nb_sparse_full.npz` and `nb_sparse_single.npz` (keys in the docstring of
+`edited_shells.py`). These arrays are part of the data release. They are not built by this repository, which
+contains no finite-element code. `site_reweighting.py` needs none of them, only the stored B3 predictions.
+`count_matched.py`, `paired_layouts.py` and `site_reweighting.py` take their dense reference set from
+`splits/analysis/controlled_tests_dense.json` (`--dense-ids all` for the full B3 test set).
 
 **8. Tables of the paper**
 
@@ -309,6 +349,39 @@ python benchmark/tables/rescore.py
 python benchmark/tables/main_table.py
 python benchmark/tables/full_tables.py
 ```
+
+### Cylinders (second structural system)
+
+The same field models, with the hyperparameters frozen on the hemisphere, are trained on axially compressed
+cylinders with dimples, under three protocols built like B1, B2 and B3: B1-cyl within distribution, B2-cyl deeper
+dimples, B3-cyl sparse to dense. `configs/cylinders_<family>.json` holds the hyperparameters and the tag of each
+protocol; the families are `figconv`, `transformer`, `transolver`, `mgn` and `deeponet`.
+
+```bash
+# training arrays outputs/cyl_nodes_8192.npz and splits/cylinders/B1.json, B2.json, B3.json
+python benchmark/cylinders/prepare_cylinders.py --records cylinders/records --design cylinders/design.json
+
+# train one family on the three protocols (seed 0)
+CFG=configs/cylinders_figconv.json
+ARGS=$(python -c "import json,sys; sys.path.insert(0,'benchmark/field_models'); import search_space as S; print(' '.join(S.as_args('figconv', json.load(open('$CFG'))['winner_params'])))")
+for P in B1:B1cyl B2:B2cyl B3:cylB3; do
+  python benchmark/field_models/train.py figconv cyl --data outputs/cyl_nodes_8192.npz \
+      --split-file splits/cylinders/${P%%:*}.json --tag ${P##*:} --epochs 200 --select buckling --seed 0 $ARGS
+done
+
+# score the stored test predictions of every family and seed
+python benchmark/cylinders/score_cylinders.py
+
+# neighbour probe and count-matched cut on the cylinder, B3-cyl models
+python benchmark/cylinders/probe_cylinders.py infer figconv --seed 0
+python benchmark/cylinders/probe_cylinders.py score
+```
+
+`prepare_cylinders.py` reads one record per cylinder shell and the design file of the pool; the format is in its
+docstring. The split files it writes are also stored in `splits/cylinders/`. `probe_cylinders.py` reads a prepared
+array of re-simulated shells, `outputs/cyl_probe_cut_8192.npz`, on the nodes of `outputs/cyl_nodes_8192.npz`. Like
+the arrays of the edited shells, it is part of the data release and is not built by this repository, which contains
+no finite-element code.
 
 ### What the review sample supports
 

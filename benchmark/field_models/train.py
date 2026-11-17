@@ -3,6 +3,8 @@
     python benchmark/field_models/train.py MODEL SPLIT [--epochs 200] [--bs 8] [--select buckling] [hyperparameter flags] [--smoke]
       MODEL  transformer | transolver | mgn | deeponet | mlp | mlp80 | sfno | figconv
       SPLIT  v2/random | v2/delta | v2/regime (= the released B1, B2, B3); random | delta | regime are the pre-release v1
+             cyl with --data FILE --split-file FILE = the second structural system, axially compressed cylinders
+             (benchmark/cylinders/prepare_cylinders.py; SPLIT then only names the run, use --tag for the protocol)
 
 Recipe (the protocol; never searched): AdamW betas 0.9/0.999, eps 1e-8, 5 % linear warm-up then cosine to 1 % of
 the peak lr, EMA 0.999, bf16 autocast, grad clip 1, effective batch 8 (micro-batches accumulate), loss = MSE(U) +
@@ -99,6 +101,11 @@ ap.add_argument("--width-mult", type=float, default=None, help="figconv: channel
 ap.add_argument("--width", type=int, default=None, help="deeponet/mlp: width")
 ap.add_argument("--depth", type=int, default=None, help="deeponet: depth")
 ap.add_argument("--prefix-inc", type=int, default=0, help="feed the displacement field N Riks\n                increments BEFORE the first limit point as extra input channels, read from\n                release/path. App. H measures that the two competing sites only separate in the last\n                few increments; this asks whether a model handed that window reads the decision.")
+ap.add_argument("--data", default="", help="npz {ids, P, W, U, K, R, NRM, THZ, RADIUS} on 8,192 nodes of another structure "
+                "(benchmark/cylinders/prepare_cylinders.py), read instead of the hemisphere arrays; NRM (unit outward normals) "
+                "replaces P in the uniform-contraction step of the buckling metric and the site error is the surface distance "
+                "sqrt((RADIUS dtheta)^2 + dz^2) / RADIUS in degrees (THZ = theta rad, z mm). Use with --split-file.")
+ap.add_argument("--split-file", default="", help="split JSON {train, val, test} by id, read instead of splits/SPLIT.json (SPLIT then only names the run)")
 ap.add_argument("--nodes", type=int, default=8192, help='input resolution: 2048/4096 subsample the 8192 nodes; 16384/32768 read data_all_32768.npz; 76805 reads the full native mesh')
 A = ap.parse_args(); torch.backends.cuda.matmul.allow_tf32 = True
 if A.use_best:
@@ -122,15 +129,21 @@ if not A.micro:
     if A.nodes > 8192: MICRO = min(MICRO, 2)
     if A.nodes > 32768: MICRO = 1
 
-sp = json.load(open("%s/splits/%s.json" % (B, A.split)))
+sp = json.load(open(A.split_file if A.split_file else "%s/splits/%s.json" % (B, A.split)))
 _PFX = "canon" if A.split.startswith("v2/") else "rel"
-d = np.load(OUT + "/%s_nodes_%s.npz" % (_PFX, "full" if A.nodes >= 76805 else "8192"))
+d = np.load(A.data) if A.data else np.load(OUT + "/%s_nodes_%s.npz" % (_PFX, "full" if A.nodes >= 76805 else "8192"))
 ids, W, U, K, P = d["ids"], d["W"], d["U"], d["K"], d["P"]
+GEO = None
+if A.data:
+    assert A.nodes == 8192 and not (A.prefix_inc or A.decision_weight) and A.model not in ("sfno", "mlp", "mlp80"), \
+        "--data: node models on the npz's own 8,192 nodes only"
+    NRM = d["NRM"].astype(np.float32); GEO = (d["THZ"].astype(np.float64), float(d["RADIUS"]))
 if A.nodes > 8192 and A.nodes < 76805:                     # 32k prep (4975 shells, own node set); r_d2_d1 mapped by id
     d32 = np.load(OUT + "/data_all_32768.npz"); rmap = dict(zip(ids.tolist(), d["R"])); ids, W, U, K, P = d32["ids"], d32["W"], d32["U"], d32["K"], d32["P"]
     d = {"R": np.array([rmap.get(int(i), np.nan) for i in ids])}
 if A.nodes != P.shape[0]:
     sel = np.sort(np.random.default_rng(1).choice(P.shape[0], A.nodes, replace=False)); W, U, P = W[:, sel], U[:, sel], P[sel]
+if GEO is None: NRM = P                                     # hemisphere: the unit node position IS the normal
 pos = {int(i): j for j, i in enumerate(ids)}
 tr = np.array([pos[i] for i in sp["train"] if i in pos]); va = np.array([pos[i] for i in sp["val"] if i in pos]); te = np.array([pos[i] for i in sp["test"] if i in pos])
 if A.frac < 1: tr = np.sort(np.random.default_rng(100 + A.seed).choice(tr, int(round(A.frac * len(tr))), replace=False))
@@ -687,13 +700,16 @@ def evaluate(model, idx):
     amp = np.linalg.norm(y, axis=2); m = amp > 0.1 * amp.max(1, keepdims=True)
     r2d = 1 - ((pf - y)[m] ** 2).sum() / ((y - y.mean(0))[m] ** 2).sum()
     r2k = 1 - ((pk - k) ** 2).sum() / ((k - k.mean()) ** 2).sum()
-    ur_t = (y * P).sum(-1).mean(1); ur_p = (pf * P).sum(-1).mean(1)
-    Dt = y - ur_t[:, None, None] * P; Dp = pf - ur_p[:, None, None] * P
+    ur_t = (y * NRM).sum(-1).mean(1); ur_p = (pf * NRM).sum(-1).mean(1)
+    Dt = y - ur_t[:, None, None] * NRM; Dp = pf - ur_p[:, None, None] * NRM
     r2b = _rel_r2(Dt, Dp)
     _md = np.linalg.norm(Dt, axis=-1); _md = _md > 0.1 * _md.max(1, keepdims=True)
     r2bd = _rel_r2(Dt[_md], Dp[_md])
     jt = amp.argmax(1); jp = np.linalg.norm(pf, axis=2).argmax(1)
     ang = np.degrees(np.arccos(np.clip((P[jt] * P[jp]).sum(1), -1, 1)))
+    if GEO is not None:                           # --data: surface distance on the cylinder, as an angle at its radius
+        _th, _z = GEO[0][:, 0], GEO[0][:, 1]; _dth = (_th[jt] - _th[jp] + np.pi) % (2 * np.pi) - np.pi
+        ang = np.degrees(np.sqrt((GEO[1] * _dth) ** 2 + (_z[jt] - _z[jp]) ** 2) / GEO[1])
     return r2f, r2d, r2k, ang, pf, pk, r2b, r2bd
 
 def dump(name, idx, pf, pk, ang, ep):

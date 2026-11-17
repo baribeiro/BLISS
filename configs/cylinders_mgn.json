@@ -1,0 +1,31 @@
+{
+ "model": "mgn",
+ "task": "cyl",
+ "nodes": 8192,
+ "select": "buckling",
+ "epochs": 200,
+ "source": "frozen winner of the hemisphere B1 search (configs/phase2_mgn_v2random_n8192_buckling_hp2.json, winner_params), written with six significant digits; not searched again on the cylinders",
+ "winner_params": {
+  "lr": 0.00049445,
+  "wd": 8.68395e-05,
+  "hidden": 256,
+  "blocks": 12,
+  "knn": 16
+ },
+ "data": "outputs/cyl_nodes_8192.npz",
+ "protocols": {
+  "B1-cyl": {
+   "split_file": "splits/cylinders/B1.json",
+   "tag": "B1cyl"
+  },
+  "B2-cyl": {
+   "split_file": "splits/cylinders/B2.json",
+   "tag": "B2cyl"
+  },
+  "B3-cyl": {
+   "split_file": "splits/cylinders/B3.json",
+   "tag": "cylB3"
+  }
+ },
+ "command": "python benchmark/field_models/train.py mgn cyl --data outputs/cyl_nodes_8192.npz --split-file splits/cylinders/B1.json --epochs 200 --select buckling --tag B1cyl --lr 0.00049445 --wd 8.68395e-05 --hidden 256 --blocks 12 --knn 16 --seed 0"
+}

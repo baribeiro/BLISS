@@ -1,0 +1,32 @@
+{
+ "model": "transformer",
+ "task": "cyl",
+ "nodes": 8192,
+ "select": "buckling",
+ "epochs": 200,
+ "source": "frozen winner of the hemisphere B1 search (configs/phase2_transformer_v2random_n8192_buckling_hp2.json, winner_params), written with six significant digits; not searched again on the cylinders",
+ "winner_params": {
+  "lr": 0.000171124,
+  "wd": 0.00221016,
+  "dim": 384,
+  "layers": 8,
+  "heads": 8,
+  "dropout": 0.0116271
+ },
+ "data": "outputs/cyl_nodes_8192.npz",
+ "protocols": {
+  "B1-cyl": {
+   "split_file": "splits/cylinders/B1.json",
+   "tag": "B1cyl"
+  },
+  "B2-cyl": {
+   "split_file": "splits/cylinders/B2.json",
+   "tag": "B2cyl"
+  },
+  "B3-cyl": {
+   "split_file": "splits/cylinders/B3.json",
+   "tag": "cylB3"
+  }
+ },
+ "command": "python benchmark/field_models/train.py transformer cyl --data outputs/cyl_nodes_8192.npz --split-file splits/cylinders/B1.json --epochs 200 --select buckling --tag B1cyl --lr 0.000171124 --wd 0.00221016 --dim 384 --layers 8 --heads 8 --dropout 0.0116271 --seed 0"
+}
