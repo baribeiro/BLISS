@@ -25,8 +25,7 @@ INPUTS
   <runs>/final_runs/<fam>_B3_n8192/*_{val,test}_pred.npz    published predictions of the same models, as count_matched.py
   --dense-ids                                        the dense reference set, as count_matched.py. Default "all", the
                                                      full B3 test set of splits/B3.json. A json list of ids selects
-                                                     another set, such as splits/analysis/controlled_tests_dense.json,
-                                                     read relative to BLISS_ROOT.
+                                                     another set, read relative to BLISS_ROOT.
   --exclude-sets                                     optional: sets of edited shells whose sources are also left out.
                                                      Empty by default, no file is read.
   <in-dir>/count_matched.json                        optional: E_cs of every count-matched shell, copied for reference

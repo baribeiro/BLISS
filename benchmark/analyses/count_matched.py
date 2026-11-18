@@ -15,10 +15,8 @@ INPUTS
                                                       are its input, see the contract in its docstring)
   <runs>/final_runs/<fam>_B3_n8192/*_{val,test}_pred.npz   published predictions of the same models (transfer.py)
   --dense-ids                                         the dense reference set. Default "all", the full B3 test set
-                                                      of splits/B3.json. A json list of ids selects another set, such
-                                                      as splits/analysis/controlled_tests_dense.json (the B3 test
-                                                      shells outside the few-shot adaptation pool and outside the
-                                                      sources of the neighbour probe), read relative to BLISS_ROOT.
+                                                      of splits/B3.json. A json list of ids selects another set,
+                                                      read relative to BLISS_ROOT.
   <edited-dir>/<set>.npz of --exclude-sets            optional: the source shells of these sets are also left out of
                                                       the dense reference set. Empty by default, no file is read.
 

@@ -88,7 +88,6 @@ configs/                   frozen hyperparameters of the eight field models (win
                            cylinders_<family>.json: the same hyperparameters and the run tags for the cylinders
 splits/                    B1.json, B2.json, B3.json: the three protocols of release 1.0 (ids of the 4,399 core shells)
     cylinders/             B1.json, B2.json, B3.json: the three protocols of the cylinders
-    analysis/              controlled_tests_dense.json: ids of the dense reference set of the controlled tests
 tests/                     tests of the scorer (test_metrics.py), of the ranking analyses (test_ranking.py), of the
                            label-range control (test_label_range.py) and of the helpers of the full-mesh tables
                            (test_native_tables.py), pytest
@@ -348,7 +347,7 @@ The controlled tests read prepared arrays of re-simulated shells, one file per s
 `nb_dense_single.npz`, `nb_dense_nb.npz`, `nb_sparse_full.npz` and `nb_sparse_single.npz` (keys in the docstring of
 `edited_shells.py`). These arrays are part of the data release. They are not built by this repository, which
 contains no finite-element code. `site_reweighting.py` needs none of them, only the stored B3 predictions.
-`count_matched.py`, `paired_layouts.py` and `site_reweighting.py` score against the full B3 test set by default (`--dense-ids` takes another list of ids, such as `splits/analysis/controlled_tests_dense.json`). `label_range.py` reads
+`count_matched.py`, `paired_layouts.py` and `site_reweighting.py` score against the full B3 test set by default (`--dense-ids` takes another list of ids). `label_range.py` reads
 the stored B3 test predictions, `splits/B3.json` and the `kappa` labels of the release, and scores the full B3 test set.
 
 **8. Tables of the paper**

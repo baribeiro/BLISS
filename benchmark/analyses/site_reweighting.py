@@ -16,9 +16,7 @@ INPUTS
                                                            Files that are not on 8,192 nodes are skipped.
   --dense-ids                                              the dense reference set, as count_matched.py. Default
                                                            "all", the full B3 test set of splits/B3.json. A json list
-                                                           of ids selects another set, such as
-                                                           splits/analysis/controlled_tests_dense.json, read relative
-                                                           to BLISS_ROOT.
+                                                           of ids selects another set, read relative to BLISS_ROOT.
   --exclude-sets                                           optional: sets of edited shells whose sources are also left
                                                            out (<edited-dir>/<set>.npz). Empty by default, no file is
                                                            read.
