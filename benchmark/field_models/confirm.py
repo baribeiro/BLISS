@@ -278,7 +278,7 @@ print('=== %s | frozen plan, %d trials in the search, %d configurations ==='
 COMBS = [(rank, seed) for rank in range(A.n_top) for seed in range(A.n_seeds)]
 
 if not A.confirm:
-    # --------------------------------------------------- treinar as N_TOP com orcamento cheio
+    # --------------------------------------------------- train the N_TOP configurations with the full budget
     if A.only >= 0:
         if A.only >= len(COMBS):
             print('  nothing to do: --only %d outside the %d combinations' % (A.only, len(COMBS)))
@@ -307,8 +307,8 @@ if not A.confirm:
     if not resultados:
         sys.exit('no run wrote a record')
     resultados.sort(key=lambda x: -x["val_mean"])
-    print("\n=== fase 2: %s ===" % ESTUDO)
-    print("%5s %10s %10s %10s   %s" % ("rank", "val medio", "desvio", "busca", "config"))
+    print("\n=== phase 2: %s ===" % ESTUDO)
+    print("%5s %10s %10s %10s   %s" % ("rank", "val mean", "std", "search", "config"))
     for r in resultados:
         print("%5d %10.4f %10.4f %10.4f   %s"
               % (r["rank"], r["val_mean"], r["val_std"], r["trial_value"], json.dumps(r["params"])))
@@ -321,8 +321,8 @@ if not A.confirm:
                    select=A.select, epochs=A.epochs, n_top=A.n_top, n_seeds=A.n_seeds,
                    search_margin_top_to_next=margem, n_search_trials=n_ok,
                    results=resultados, winner_rank=v["rank"], winner_params=v["params"],
-                   selection_rule="maior media de val_selected sobre as sementes"))
-    print("\nescrito em %s" % DESTINO)
+                   selection_rule="highest mean of val_selected over the seeds"))
+    print("\nwrote %s" % DESTINO)
     print('to open the test set: confirm.py ... --confirm')
 else:
     if not os.path.exists(DESTINO):
@@ -343,7 +343,7 @@ else:
                        select=A.select, epochs=A.epochs, n_top=A.n_top, n_seeds=A.n_seeds,
                        search_margin_top_to_next=margem, n_search_trials=n_ok,
                        results=resultados, winner_rank=v["rank"], winner_params=v["params"],
-                       selection_rule="maior media de val_selected sobre as sementes"))
+                       selection_rule="highest mean of val_selected over the seeds"))
         print('  winner: config %d, mean val %.4f +- %.4f'
               % (v["rank"], v["val_mean"], v["val_std"]), flush=True)
     d = json.load(open(DESTINO))
@@ -364,7 +364,7 @@ else:
     chaves = ["test_buckling_dimple_r2", "test_dimple_r2", "test_field_r2", "test_kappa_r2",
               "test_buckling_r2", "test_loc_median", "test_loc10"]
     resumo = {}
-    print("\n%-26s %10s %10s" % ("metrica", "media", "desvio"))
+    print("\n%-26s %10s %10s" % ("metric", "mean", "std"))
     for k in chaves:
         v = np.array([x.get(k, np.nan) for x in linhas], float)
         resumo[k] = dict(mean=float(np.nanmean(v)), std=float(np.nanstd(v)), per_seed=v.tolist())
@@ -372,4 +372,4 @@ else:
     d["test"] = resumo
     d["test_n_seeds"] = len(linhas)
     _escreve_atomico(DESTINO, d)
-    print("\nactualizado em %s" % DESTINO)
+    print("\nupdated %s" % DESTINO)

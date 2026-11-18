@@ -55,4 +55,4 @@ if not FULL and CANON:
     sel = np.array([gi[int(v)] for v in ids])
     np.savez(OUT + "/canon_grid.npz", ids=ids, GW=g["GW"][sel], GU=g["GU"][sel], K=g["K"][sel])
     print('canon_grid.npz: %d shells selected from the grid file' % len(sel))
-print("done: %s, %d shells, %d nos, %.1f GB, %.0fs" % (SRC.split("/")[-1], n, NN, (W.nbytes + U.nbytes) / 1e9, time.time() - t))
+print("done: %s, %d shells, %d nodes, %.1f GB, %.0fs" % (SRC.split("/")[-1], n, NN, (W.nbytes + U.nbytes) / 1e9, time.time() - t))

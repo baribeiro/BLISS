@@ -149,13 +149,13 @@ if __name__ == "__main__":
     el = EloFraco()
     print('kappa_1 fitted on %d single-defect shells, polynomial of degree %d in (log d, log b)'
           % (len(el.d), el.grau))
-    print("  ajuste nos proprios singles: R2 %.4f   erro %.3f%%   rmse %.5f"
+    print("  fit on the single-defect shells themselves: R2 %.4f   error %.3f%%   rmse %.5f"
           % (el.r2, el.err, el.rmse))
-    print("  dominio: delta %.3f..%.3f   beta0 %.2f..%.2f graus" % (*el.lim_d, *el.lim_b))
+    print("  domain: delta %.3f..%.3f   beta0 %.2f..%.2f deg" % (*el.lim_d, *el.lim_b))
     print()
     df["kappa_wl"] = el.para_tabela(df)
     print('=== first rung: the worst defect only ===')
-    print("%-12s %6s %10s %10s %12s %10s" % ("origem", "n", "erro %", "R2", "vies medio", "dentro"))
+    print("%-12s %6s %10s %10s %12s %10s" % ("source", "n", "error %", "R2", "mean bias", "inside"))
     for o, g in df.groupby("origin"):
         k, w = g["kappa"].to_numpy(), g["kappa_wl"].to_numpy()
         m = np.isfinite(w)

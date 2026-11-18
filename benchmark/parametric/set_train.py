@@ -61,7 +61,7 @@ A = ap.parse_args()
 DEV = torch.device(A.device if torch.cuda.is_available() or A.device == "cpu" else "cpu")
 
 # ---------------------------------------------------------------- dados
-DF = pd.read_parquet(OUT + ("/parametric_master_kappa_nosso.parquet" if os.environ.get("BLISS_KAPPA_NOSSO")
+DF = pd.read_parquet(OUT + ("/parametric_master_kappa_limit_point.parquet" if os.environ.get("BLISS_KAPPA_LIMIT_POINT")
                              else "/parametric_master.parquet")).set_index("id", drop=False)   # multi kappa ours with the variable
 if "held_out" in DF.columns and DF["held_out"].any():
     n = int(DF["held_out"].sum())
@@ -150,7 +150,7 @@ def r2(p, y):
 
 
 CURVA = []                                                                # per-epoch curve of the last treina()
-REGISTA_CURVA = bool(os.environ.get("BLISS_KAPPA_NOSSO"))                 # only in the _kn finals
+REGISTA_CURVA = bool(os.environ.get("BLISS_KAPPA_LIMIT_POINT"))                 # only in the _kn finals
 
 
 def treina(t, seed, ep=None):
@@ -234,7 +234,7 @@ from optuna.storages.journal import JournalFileBackend                   # noqa:
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 os.makedirs(A.storage, exist_ok=True)
 NOME = "set_%s_%s_%s%s" % (A.arch, A.split, A.target, A.tag)
-SAIDA = NOME + ("_kn" if os.environ.get("BLISS_KAPPA_NOSSO") else "")   # outputs only; the study is NOME
+SAIDA = NOME + ("_kn" if os.environ.get("BLISS_KAPPA_LIMIT_POINT") else "")   # outputs only; the study is NOME
 STU = optuna.create_study(
     study_name=NOME, storage=JournalStorage(JournalFileBackend("%s/%s.log" % (A.storage, NOME))),
     direction="minimize", load_if_exists=True,
@@ -268,7 +268,7 @@ if A.modo == "hpo":
             raise optuna.TrialPruned()
         e, q = avalia(net, "va")
         t.set_user_attr("r2", q)
-        print("  ensaio %3d  erro %.3f%%  R2 %.4f  (%.0fs)" % (t.number, e, q, time.time() - t0),
+        print("  trial %3d  error %.3f%%  R2 %.4f  (%.0fs)" % (t.number, e, q, time.time() - t0),
               flush=True)
         return e
 
@@ -328,7 +328,7 @@ if A.modo == "hpo":
     print('study %s: %d valid trials, target %d' % (NOME, feitos, A.n_trials), flush=True)
     STU.optimize(obj, n_trials=max(0, 3 * A.n_trials - feitos), callbacks=[_para_no_alvo])
     b = STU.best_trial
-    print("\nmelhor: erro %.3f%%  R2 %.4f  %s" % (b.value, b.user_attrs["r2"], json.dumps(b.params)))
+    print("\nbest: error %.3f%%  R2 %.4f  %s" % (b.value, b.user_attrs["r2"], json.dumps(b.params)))
     json.dump(dict(study=NOME, arch=A.arch, split=A.split, target=A.target, extra=A.extra,
                    n_train=len(TR), n_trials=len(STU.trials), best_val_err=b.value,
                    best_val_r2=b.user_attrs["r2"], params=b.params),
@@ -341,7 +341,7 @@ else:
         net = treina(optuna.trial.FixedTrial(b.params), seed=s)
         e, q = avalia(net, "te")
         ev.append(e); er.append(q)
-        print("  semente %d  erro %.3f%%  R2 %.4f" % (s, e, q), flush=True)
+        print("  seed %d  error %.3f%%  R2 %.4f" % (s, e, q), flush=True)
         with torch.no_grad():
             net.eval(); X, G, M, y, w = prep("te"); p = net(X, G, M)
             p = (p + w) if A.target == "residual" else p
@@ -355,8 +355,8 @@ else:
             por_regime.setdefault(o, []).append([erro(p[m], y[m]), r2(p[m], y[m]), int(m.sum())])
     ev, er = np.array(ev), np.array(er)
     for o, v in por_regime.items():
-        v = np.array(v); print("  %-9s n=%d  erro %.3f%% +- %.3f  R2 %.4f +- %.4f" % (o, v[0, 2], v[:, 0].mean(), v[:, 0].std(), v[:, 1].mean(), v[:, 1].std()))
-    print("\n  erro %.3f%% +- %.3f   R2 %.4f +- %.4f" % (ev.mean(), ev.std(), er.mean(), er.std()))
+        v = np.array(v); print("  %-9s n=%d  error %.3f%% +- %.3f  R2 %.4f +- %.4f" % (o, v[0, 2], v[:, 0].mean(), v[:, 0].std(), v[:, 1].mean(), v[:, 1].std()))
+    print("\n  error %.3f%% +- %.3f   R2 %.4f +- %.4f" % (ev.mean(), ev.std(), er.mean(), er.std()))
     json.dump(dict(study=NOME, arch=A.arch, split=A.split, target=A.target, extra=A.extra,
                    params=b.params, seeds=A.seeds, n_test=len(TE),
                    test_err_mean=float(ev.mean()), test_err_std=float(ev.std()),

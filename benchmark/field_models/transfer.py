@@ -162,14 +162,14 @@ else:
         r = _corre(s, abre_teste=True)
         if r:
             linhas.append(r)
-            print("  semente %d  teste buckling_dimple_r2 %.4f  kappa_r2 %.4f"
+            print("  seed %d  test buckling_dimple_r2 %.4f  kappa_r2 %.4f"
                   % (s, r["test_buckling_dimple_r2"], r["test_kappa_r2"]), flush=True)
     if not linhas:
         sys.exit('no confirmation wrote a record')
     chaves = ["test_buckling_dimple_r2", "test_dimple_r2", "test_field_r2", "test_kappa_r2",
               "test_buckling_r2", "test_loc_median", "test_loc10"]
     res = {}
-    print("\n%-26s %10s %10s" % ("metrica", "media", "desvio"))
+    print("\n%-26s %10s %10s" % ("metric", "mean", "std"))
     for k in chaves:
         v = np.array([x.get(k, np.nan) for x in linhas], float)
         res[k] = dict(mean=float(np.nanmean(v)), std=float(np.nanstd(v)), per_seed=v.tolist())
@@ -180,4 +180,4 @@ else:
                    frozen_params=CFG, frozen_from=os.path.basename(PLANO), test=res),
               open(tmp, "w"), indent=1)
     os.replace(tmp, dest)
-    print("\nescrito em %s" % dest)
+    print("\nwrote %s" % dest)

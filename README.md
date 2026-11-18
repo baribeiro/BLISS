@@ -241,7 +241,7 @@ python benchmark/field_models/train.py figconv v2/random --epochs 1
 
 | resource | paper setting | notes |
 |---|---|---|
-| GPU | NVIDIA H100 and A100 (most runs), one run per GPU | 1,967 GPU-hours of training for the whole benchmark |
+| GPU | NVIDIA H100 and A100 (most runs), one run per GPU | about 2,130 GPU-hours of training for the whole benchmark |
 | field model, B1 final | about 7 GPU-hours per 200-epoch run | 272 GPU-hours over 39 runs |
 | hyperparameter search | 217 trials of 60 epochs | 876 GPU-hours |
 | tabular models | CPU | 2,887 core-hours of searches and finals |
@@ -329,7 +329,7 @@ python benchmark/analyses/interventions_inputs.py
 python benchmark/analyses/interventions_predict.py build
 python benchmark/analyses/interventions_predict.py infer --families figconv,sfno,transformer --seeds 0,1,2
 python benchmark/analyses/interventions_score.py
-python benchmark/analyses/fewshot.py --stage all --models figconv,sfno,transformer
+python benchmark/analyses/fewshot.py --stage all --draws 5 --draw-ks 5,10 --models figconv,sfno,transformer
 python benchmark/analyses/ranking.py
 # controlled tests on edited shells (prepared arrays under outputs/edited_shells/, see below)
 python benchmark/analyses/edited_shells.py --sets cut_dense,layout_10deg,layout_25deg --variant b3
@@ -369,22 +369,29 @@ dimples, B3-cyl sparse to dense. `configs/cylinders_<family>.json` holds the hyp
 protocol; the families are `figconv`, `transformer`, `transolver`, `mgn` and `deeponet`.
 
 ```bash
+# these commands need the cylinder records, released with the camera-ready version of the paper
 # training arrays outputs/cyl_nodes_8192.npz and splits/cylinders/B1.json, B2.json, B3.json
 python benchmark/cylinders/prepare_cylinders.py --records cylinders/records --design cylinders/design.json
 
-# train one family on the three protocols (seed 0)
-CFG=configs/cylinders_figconv.json
-ARGS=$(python -c "import json,sys; sys.path.insert(0,'benchmark/field_models'); import search_space as S; print(' '.join(S.as_args('figconv', json.load(open('$CFG'))['winner_params'])))")
-for P in B1:B1cyl B2:B2cyl B3:cylB3; do
-  python benchmark/field_models/train.py figconv cyl --data outputs/cyl_nodes_8192.npz \
-      --split-file splits/cylinders/${P%%:*}.json --tag ${P##*:} --epochs 200 --select buckling --seed 0 $ARGS
+# train the five families on the three protocols, three seeds each, as in the paper
+for FAM in figconv transformer transolver mgn deeponet; do
+  CFG=configs/cylinders_$FAM.json
+  ARGS=$(python -c "import json,sys; sys.path.insert(0,'benchmark/field_models'); import search_space as S; print(' '.join(S.as_args('$FAM', json.load(open('$CFG'))['winner_params'])))")
+  for P in B1:B1cyl B2:B2cyl B3:cylB3; do
+    for SEED in 0 1 2; do
+      python benchmark/field_models/train.py $FAM cyl --data outputs/cyl_nodes_8192.npz \
+          --split-file splits/cylinders/${P%%:*}.json --tag ${P##*:} --epochs 200 --select buckling --seed $SEED $ARGS
+    done
+  done
 done
 
 # score the stored test predictions of every family and seed
 python benchmark/cylinders/score_cylinders.py
 
 # neighbour probe and count-matched cut on the cylinder, B3-cyl models
-python benchmark/cylinders/probe_cylinders.py infer figconv --seed 0
+for FAM in figconv transformer transolver mgn deeponet; do
+  for SEED in 0 1 2; do python benchmark/cylinders/probe_cylinders.py infer $FAM --seed $SEED; done
+done
 python benchmark/cylinders/probe_cylinders.py score
 ```
 
@@ -392,7 +399,8 @@ python benchmark/cylinders/probe_cylinders.py score
 docstring. The split files it writes are also stored in `splits/cylinders/`. `probe_cylinders.py` reads a prepared
 array of re-simulated shells, `outputs/cyl_probe_cut_8192.npz`, on the nodes of `outputs/cyl_nodes_8192.npz`. Like
 the arrays of the edited shells, it is part of the data release and is not built by this repository, which contains
-no finite-element code.
+no finite-element code. The cylinder records and these arrays are released with the camera-ready version of the
+paper, in the format of the hemisphere release.
 
 ### What the review sample supports
 

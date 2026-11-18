@@ -1,6 +1,6 @@
-"""Intervention tests (App K): the pre-registered statistics of the benchmark plan, Part K (r2, frozen sha256
-52832869...) as amended by K-A1 (r3.3, frozen sha256 a4a11776...). Implements exactly those definitions; nothing
-here is tuned on the results.
+"""Intervention tests: the statistics defined in the paper (appendix Full results, Intervention tests), fixed
+before the predictions were opened. Implements exactly those definitions; nothing here is tuned on the
+results.
 
     python benchmark/analyses/interventions_score.py [--in-dir outputs] [--n-boot 2000]
     python benchmark/analyses/interventions_score.py --synthetic       # plumbing test on generated csvs; never reads the real predictions

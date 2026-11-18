@@ -41,8 +41,8 @@ ap.add_argument("--split", default="B1", choices=["B1", "B2", "B3"])
 ap.add_argument("--rep", default="topk", choices=["phys", "topk", "interac", "adim"])
 ap.add_argument("--pad", default="search", choices=list(F.PAD) + ["search"],
                 help="how to fill the unused slots: zero, mask (zero + presence bit) or nan. 'search' lets validation choose.")
-ap.add_argument("--families", default="tudo", choices=sorted(TM.GRUPOS),
-                help="group of families: 'tudo' (all), 'chao' (floor), 'arvores' (trees), 'redes' (networks), 'gpu_arvores', 'trees' (CPU-friendly) or 'mlp'")
+ap.add_argument("--families", default="all", choices=sorted(TM.GRUPOS),
+                help="group of families: 'all', 'floor' (linear and kernel models), 'tree_models', 'networks', 'gpu_trees', 'trees' (CPU-friendly) or 'mlp'")
 ap.add_argument("--device", default="cpu",
                 help='cpu or cuda. Affects the MLP, xgboost and lightgbm; the sklearn families always run on CPU.')
 ap.add_argument("--n-trials", type=int, default=200)
@@ -138,7 +138,7 @@ from optuna.storages.journal import JournalFileBackend                   # noqa:
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 os.makedirs(A.storage, exist_ok=True)
 NOME = "oracle_%s_%s%s" % (A.split, A.rep, A.tag)
-SAIDA = NOME + ("_kn" if os.environ.get("BLISS_KAPPA_NOSSO") else "")   # outputs only; the study (and its hyperparameters) is NOME
+SAIDA = NOME + ("_kn" if os.environ.get("BLISS_KAPPA_LIMIT_POINT") else "")   # outputs only; the study (and its hyperparameters) is NOME
 STU = optuna.create_study(
     study_name=NOME, storage=JournalStorage(JournalFileBackend("%s/%s.log" % (A.storage, NOME))),
     direction="minimize", load_if_exists=True,
@@ -207,7 +207,7 @@ if A.modo == "hpo":
         t.set_user_attr("fit_s", round(time.time() - t0, 1))
         melhor = min([x.value for x in t.study.trials if x.value is not None] + [float("inf")])
         if t.number % 10 == 0 or e <= melhor:
-            print("  ensaio %3d  %-9s %-5s K=%-2d  erro %.3f%%  R2 %.4f  (%.0fs)"
+            print("  trial %3d  %-9s %-5s K=%-2d  error %.3f%%  R2 %.4f  (%.0fs)"
                   % (t.number, t.params["fam"], q, k, e, t.user_attrs["r2"], time.time() - t0),
                   flush=True)
         return e
@@ -226,7 +226,7 @@ if A.modo == "hpo":
         print('--- best per number of slots (validation) ---')
         for k, v in sorted(pork.items(), key=lambda x: x[1]):
             print("  K=%-7s %.3f%%" % (k, v))
-    print("\nmelhor global: %s / %s / K=%s  erro %.3f%%  R2 %.4f"
+    print("\nglobal best: %s / %s / K=%s  error %.3f%%  R2 %.4f"
           % (b.params["fam"], b.params["pad"], b.params["k"], b.value, b.user_attrs["r2"]))
     json.dump(dict(study=NOME, split=A.split, rep=A.rep, n_trials=len(STU.trials),
                    best_val_err=b.value, best_val_r2=b.user_attrs["r2"], params=b.params,
@@ -255,9 +255,9 @@ elif A.modo == "final":
         PREVS.append(p)
         ev.append(erro(p, yte))
         er.append(r2(p, yte))
-        print("  semente %d  erro %.3f%%  R2 %.4f" % (s, ev[-1], er[-1]), flush=True)
+        print("  seed %d  error %.3f%%  R2 %.4f" % (s, ev[-1], er[-1]), flush=True)
     ev, er = np.array(ev), np.array(er)
-    print("\n  erro %.3f%% +- %.3f   R2 %.4f +- %.4f" % (ev.mean(), ev.std(), er.mean(), er.std()))
+    print("\n  error %.3f%% +- %.3f   R2 %.4f +- %.4f" % (ev.mean(), ev.std(), er.mean(), er.std()))
     np.savez("%s/%s_pred.npz" % (OUT, SAIDA), ids=np.array(TE), true_K=yte,
              pred_K=np.array(PREVS).mean(0), pred_K_per_seed=np.array(PREVS))
     json.dump(dict(split=A.split, rep=A.rep, family=b.params["fam"], pad=q, k=kk, seeds=A.seeds,
@@ -270,7 +270,7 @@ elif A.modo == "final":
 else:
     b = STU.best_trial
     q, kk = b.params["pad"], b.params["k"]
-    print("=== curva de aprendizagem: %s %s | %s / %s ===" % (A.split, A.rep, b.params["fam"], q),
+    print("=== learning curve: %s %s | %s / %s ===" % (A.split, A.rep, b.params["fam"], q),
           flush=True)
     linhas = []
     Xtr = MAT[(q, kk)]["tr"]
@@ -285,7 +285,7 @@ else:
             r.append(r2(p, yte))
         linhas.append(dict(frac=frac, n=n, err=float(np.mean(e)), err_sd=float(np.std(e)),
                            r2=float(np.mean(r)), r2_sd=float(np.std(r))))
-        print("  n=%5d  erro %.3f%% +- %.3f   R2 %.4f +- %.4f"
+        print("  n=%5d  error %.3f%% +- %.3f   R2 %.4f +- %.4f"
               % (n, np.mean(e), np.std(e), np.mean(r), np.std(r)), flush=True)
     json.dump(dict(split=A.split, rep=A.rep, family=b.params["fam"], pad=q, k=kk, curve=linhas),
               open("%s/%s_curve.json" % (OUT, SAIDA), "w"), indent=1)

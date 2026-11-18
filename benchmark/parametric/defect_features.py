@@ -111,7 +111,7 @@ def _carrega(raiz=None):
         for r in csv.DictReader(open(rep)):
             if r.get("p_classical"):
                 pc[int(r["shell"])] = float(r["p_classical"])
-    E_MPA = 1.25                               # neo-Hookean, ver appendix/datasheet.tex
+    E_MPA = 1.25                               # neo-Hookean, see the datasheet of the paper
     for i, c in casca.items():
         if i not in pc:
             pc[i] = 2.0 * E_MPA / np.sqrt(3 * (1 - c["nu"] ** 2)) * (c["t"] / c["R"]) ** 2
@@ -119,13 +119,13 @@ def _carrega(raiz=None):
 
 
 DEF, CASCA, KD, PC = _carrega()
-# BLISS_KAPPA_NOSSO=1: the multi-defect kappa comes from OUR solves (first limit point, as in the
-# released records) instead of the tabulated value; singles and doubles keep the tabulated kappa.
-# Without the variable nothing changes. Table: outputs/kappa_nosso_multi.csv.
-if os.environ.get("BLISS_KAPPA_NOSSO"):
-    for _r in csv.DictReader(open(B + "/outputs/kappa_nosso_multi.csv")):
+# BLISS_KAPPA_LIMIT_POINT=1: the multi-defect kappa is read at the first limit point of the released records
+# instead of the tabulated value; singles and doubles keep the tabulated kappa.
+# Without the variable nothing changes. Table: outputs/kappa_limit_point_multi.csv.
+if os.environ.get("BLISS_KAPPA_LIMIT_POINT"):
+    for _r in csv.DictReader(open(B + "/outputs/kappa_limit_point_multi.csv")):
         if int(_r["id"]) in KD:
-            KD[int(_r["id"])] = float(_r["kappa_nosso"])
+            KD[int(_r["id"])] = float(_r["kappa_limit_point"])
 
 
 def usar_catalogo():
@@ -399,7 +399,7 @@ def interac(sid, k=20, pad="mask"):
         """
         d = sum(a * b for a, b in zip(u[i], u[j]))
         return _m.degrees(_m.acos(max(-1.0, min(1.0, d))))
-    # contadores davam ZERO nos dois regimes e os descritores eram inuteis.
+    # with a fixed radius the counters were zero in both regimes and the descriptors carried no information.
     lc = _m.pi * b0
     seps1 = [sep(0, j) for j in range(1, len(ds))]
     top = ds[:k]

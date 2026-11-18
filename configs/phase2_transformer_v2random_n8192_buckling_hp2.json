@@ -58,7 +58,7 @@
   "heads": 8,
   "dropout": 0.011627111801033142
  },
- "selection_rule": "maior media de val_selected sobre as sementes",
+ "selection_rule": "highest mean of val_selected over the seeds",
  "test": {
   "test_buckling_dimple_r2": {
    "mean": 0.9730628752039275,

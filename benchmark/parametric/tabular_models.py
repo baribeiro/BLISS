@@ -41,20 +41,19 @@ TABPFN_MAX_FEATURES = 500
 TABPFN_MAX_AMOSTRAS = 10000
 
 GRUPOS = {
-    "chao": ["ridge", "elasticnet", "knn", "svr", "gp"],
-    "arvores": ["rf", "extratrees", "sk_hgb", "xgboost", "lightgbm", "catboost"],
-    "redes": ["mlp", "resnet", "ft_transformer", "tabnet", "tabpfn"],
+    "floor": ["ridge", "elasticnet", "knn", "svr", "gp"],
+    "tree_models": ["rf", "extratrees", "sk_hgb", "xgboost", "lightgbm", "catboost"],
+    "networks": ["mlp", "resnet", "ft_transformer", "tabnet", "tabpfn"],
 }
-GRUPOS["gpu_arvores"] = ["xgboost", "lightgbm", "catboost"]
-# xgboost (1.050% contra 1.720% em 800 cascas).
+GRUPOS["gpu_trees"] = ["xgboost", "lightgbm", "catboost"]
 GRUPOS["tab_gpu"] = ["xgboost", "lightgbm", "catboost", "ft_transformer"]
-GRUPOS["tudo"] = GRUPOS["chao"] + GRUPOS["arvores"] + GRUPOS["redes"]
-GRUPOS["trees"] = GRUPOS["chao"] + GRUPOS["arvores"]
+GRUPOS["all"] = GRUPOS["floor"] + GRUPOS["tree_models"] + GRUPOS["networks"]
+GRUPOS["trees"] = GRUPOS["floor"] + GRUPOS["tree_models"]
 GRUPOS["mlp"] = ["mlp"]
-GRUPOS["cpu_resto"] = [m for m in GRUPOS["tudo"] if m not in GRUPOS["tab_gpu"]]
+GRUPOS["cpu_rest"] = [m for m in GRUPOS["all"] if m not in GRUPOS["tab_gpu"]]
 
-for _f in GRUPOS["tudo"]:
-    GRUPOS.setdefault("so_" + _f, [_f])
+for _f in GRUPOS["all"]:
+    GRUPOS.setdefault("only_" + _f, [_f])
 
 
 def familias(grupo, n_features, n_train):
@@ -83,7 +82,7 @@ def familias(grupo, n_features, n_train):
     return fs
 
 
-# ---------------------------------------------------------------- redes, em torch
+# ---------------------------------------------------------------- networks, in torch
 class _Torch:
     """Training loop shared by the MLP, the ResNet and the FT-Transformer.
 
@@ -423,7 +422,7 @@ class _TabPFN:
         return np.asarray(s.m.predict(s._c(M))).ravel()
 
 
-# ---------------------------------------------------------------- despacho
+# ---------------------------------------------------------------- dispatch
 def build(fam, t, seed=0, device="cpu", n_features=0, n_train=0):
     """Build one model of a family, with its hyperparameters drawn from the trial.
 

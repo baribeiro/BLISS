@@ -72,7 +72,7 @@ for r in csv.DictReader(open(M + "/shells.csv")):
     casca[int(r["id"])] = dict(kappa=float(r["knock_down"]), R=float(r["radius"]),
                                nu=float(r["nu"]), eta=float(r["eta"]))
 
-# espessura e pressao classica medidas, quando existem; senao derivadas (t = R/eta, Zoelly)
+# measured thickness and classical pressure when available; otherwise derived (t = R/eta, Zoelly)
 med = {}
 if os.path.exists(M + "/reproduction.csv"):
     for r in csv.DictReader(open(M + "/reproduction.csv")):
@@ -116,9 +116,9 @@ for i, c in sorted(casca.items()):
     if t is None:
         t = c["R"] / c["eta"]
     if pc is None:
-        # O E FALTAVA. A formula de Zoelly e p_c = 2E/sqrt(3(1-nu^2)) * (t/R)^2, e sem o modulo
-        # para geometria identica, 99% delas do regime denso: um separador perfeito do regime
-        E_MPA = 1.25                     # neo-Hookean, ver appendix/datasheet.tex
+        # Zoelly's classical pressure is p_c = 2E/sqrt(3(1-nu^2)) * (t/R)^2. The modulus is needed here: without it
+        # the column would differ between shells of identical geometry and would separate the two regimes.
+        E_MPA = 1.25                     # neo-Hookean, see the datasheet of the paper
         pc = 2.0 * E_MPA / math.sqrt(3 * (1 - c["nu"] ** 2)) * (t / c["R"]) ** 2
     ds = sorted(defeitos[i], key=lambda x: -x[0])
     de = [x[0] for x in ds]
@@ -138,9 +138,9 @@ df = pd.DataFrame(linhas)
 os.makedirs(os.path.dirname(A.out), exist_ok=True)
 df.to_parquet(A.out, index=False)
 
-print("escrito %s" % A.out)
-print("  %d cascas, %d colunas" % (len(df), df.shape[1]))
-print("\n%-12s %6s %8s %10s %14s %16s" % ("origem", "n", "na rel.", "N", "kappa", "beta0 (graus)"))
+print("wrote %s" % A.out)
+print("  %d shells, %d columns" % (len(df), df.shape[1]))
+print("\n%-12s %6s %8s %10s %14s %16s" % ("source", "n", "in rel.", "N", "kappa", "beta0 (deg)"))
 for o, g in df.groupby("origin"):
     b = np.concatenate(g["beta0_deg"].to_numpy())
     print("%-12s %6d %8d %10s %14s %16s"

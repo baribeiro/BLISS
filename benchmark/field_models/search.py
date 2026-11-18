@@ -29,7 +29,7 @@ sys.path.insert(0, ML)
 import search_space as HS                                                      # noqa: E402
 
 
-RESULTADOS = None    # definido em run_trial; caminho do results.jsonl
+RESULTADOS = None    # set in run_trial; path of results.jsonl
 
 
 def marca_resultados():
