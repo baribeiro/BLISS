@@ -3,7 +3,7 @@ training-mean reference, the range check on the dense shells and the rank correl
 
     python benchmark/cylinders/score_cylinders.py [--pred-dir outputs] [--splits-dir splits/cylinders]
                                                   [--data outputs/cyl_nodes_8192.npz] [--tags B1=cyl_B1cyl B2=cyl_B2cyl B3=cyl_cylB3]
-                                                  [--b3-variants TAG [TAG ...]] [--corr-seeds B1=0 B2=0 B3=all] [--no-fields]
+                                                  [--b3-variants TAG [TAG ...]] [--corr-seeds B1=all B2=all B3=all] [--no-fields]
                                                   [--out outputs/score_cylinders.json]
 
 No training and no inference: everything is computed from the stored test predictions of the field models.
@@ -46,11 +46,10 @@ DEFINITIONS
   rank         Spearman correlation, over the model families scored on both, between the per-family kappa errors of
   correlations two benchmark columns. Columns: B1 (all test shells), B2 (all test shells), B3 sparse, B3 dense.
                The seeds that enter each protocol are set by --corr-seeds, one entry <benchmark>=<seed> or
-               <benchmark>=all per benchmark. Default B1=0 B2=0 B3=all: the B1 and B2 columns take the seed-0 run of
-               each family, the two B3 columns the mean over the stored seeds of each family, three in the reported
-               runs. The reported correlations of +0.60 and -0.70 use this default: seed 0 on B1 and B2, the mean of
-               three seeds on B3. The convention is printed with the correlations and saved with them, with the
-               number of runs behind every family and column. The runs of --b3-variants are left out.
+               <benchmark>=all per benchmark. Default B1=all B2=all B3=all: every column takes the mean over the
+               stored seeds of each family. <benchmark>=<seed> restricts a benchmark to the run of one seed. The
+               convention is printed with the correlations and saved with them, with the number of runs behind
+               every family and column. The runs of --b3-variants are left out.
 
 OUTPUT
   <out> (default <BLISS_ROOT>/outputs/score_cylinders.json): benchmarks {B1, B2, B3} each with per_run, per_family and
@@ -444,9 +443,9 @@ def main():
     ap.add_argument("--rule-families", nargs="+", default=["transformer", "figconv", "mgn"])
     ap.add_argument("--rule-ratio", type=float, default=2.0); ap.add_argument("--rule-min-seeds", type=int, default=3)
     ap.add_argument("--rule-min-families", type=int, default=2)
-    ap.add_argument("--corr-seeds", nargs="+", default=["B1=0", "B2=0", "B3=all"],
+    ap.add_argument("--corr-seeds", nargs="+", default=["B1=all", "B2=all", "B3=all"],
                     help="seeds that enter each protocol in the rank correlations, <benchmark>=<seed> or <benchmark>=all (mean over the stored seeds); "
-                         "default: seed 0 on B1 and B2, the mean over the seeds on B3")
+                         "default: the mean over the stored seeds on the three benchmarks")
     ap.add_argument("--out", default=B + "/outputs/score_cylinders.json"); a = ap.parse_args()
     tags = dict(t.split("=", 1) for t in a.tags); kappa = None
     if os.path.exists(a.data):

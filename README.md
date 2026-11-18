@@ -80,15 +80,18 @@ benchmark/                 the pipelines of the paper, one folder per stage (bel
         data/              shell_model_kappa.csv: kappa of the semi-analytical shell model on every test shell
     analyses/              intervention tests P1-P4, few-shot adaptation on B3, controlled tests on edited shells
                            (edited_shells.py, count_matched.py, paired_layouts.py, neighbour_probe.py,
-                           site_reweighting.py), ranking.py and label_sensitivity.py
+                           site_reweighting.py), label_range.py, ranking.py and label_sensitivity.py
     cylinders/             the second structural system: prepare_cylinders.py, score_cylinders.py, probe_cylinders.py
-    tables/                rescoring of every prediction and the tables of the paper
+    tables/                rescoring of every prediction and the tables of the paper (rescore.py, native_rescore.py,
+                           ladder_native.py, native_secondary.py, main_table.py, full_tables.py)
 configs/                   frozen hyperparameters of the eight field models (winners of the search on B1);
                            cylinders_<family>.json: the same hyperparameters and the run tags for the cylinders
 splits/                    B1.json, B2.json, B3.json: the three protocols of release 1.0 (ids of the 4,399 core shells)
     cylinders/             B1.json, B2.json, B3.json: the three protocols of the cylinders
     analysis/              controlled_tests_dense.json: ids of the dense reference set of the controlled tests
-tests/                     tests of the scorer (test_metrics.py) and of the ranking analyses (test_ranking.py), pytest
+tests/                     tests of the scorer (test_metrics.py), of the ranking analyses (test_ranking.py), of the
+                           label-range control (test_label_range.py) and of the helpers of the full-mesh tables
+                           (test_native_tables.py), pytest
 docs/                      logo and overview figure
 pyproject.toml, Makefile, requirements*.txt, constraints.txt, environment.yml, LICENSE
 ```
@@ -124,14 +127,19 @@ repository.
   `neighbour_probe.py` the deepest defect alone, with its neighbours and in the full shell; `site_reweighting.py`
   the B3 error by failure site and re-weighted to the sparse sites. The edited shells are read as prepared arrays
   of re-simulated shells, which are part of the data release and are not built by this repository (file names under
-  step 7 below). `ranking.py` compares the order of the model families across protocols; `label_sensitivity.py`
-  scores the families against `kappa` labels solved again under other settings, given as a table.
+  step 7 below). `label_range.py` is the label-range control on B3: the `kappa` error of every family, of the
+  training mean and of the semi-analytical shell model on all dense test shells and on those whose true `kappa` lies
+  inside the range of the training labels. `ranking.py` compares the order of the model families across protocols;
+  `label_sensitivity.py` scores the families against `kappa` labels solved again under other settings, given as a table.
 - [`benchmark/cylinders/`](./benchmark/cylinders): the second structural system, axially compressed cylinders.
   `prepare_cylinders.py` builds the 8,192-node training arrays and the splits B1-cyl, B2-cyl and B3-cyl from the
   per-shell records; `score_cylinders.py` scores the stored test predictions on the three protocols;
   `probe_cylinders.py` predicts and scores the neighbour probe and the count-matched cut on the cylinder.
 - [`benchmark/tables/`](./benchmark/tables): `rescore.py` rescores every stored prediction with the scorer;
-  `main_table.py` and `full_tables.py` write the tables of the paper.
+  `native_rescore.py` scores the B1 finals trained on the full mesh (76,805 nodes) on the 8,192 scoring nodes;
+  `ladder_native.py` scores the resolution ladder on B1 (2,048 against 8,192 nodes) and the full-mesh finals on B2
+  and B3; `native_secondary.py` adds the RMSE and the relative L2 error of the full-mesh finals; `main_table.py` and
+  `full_tables.py` write the tables of the paper.
 
 ### Install
 
@@ -332,6 +340,7 @@ python benchmark/analyses/count_matched.py
 python benchmark/analyses/paired_layouts.py
 python benchmark/analyses/neighbour_probe.py
 python benchmark/analyses/site_reweighting.py
+python benchmark/analyses/label_range.py                       # label-range control on B3, stored predictions only
 ```
 
 The controlled tests read prepared arrays of re-simulated shells, one file per set of edited shells:
@@ -340,12 +349,16 @@ The controlled tests read prepared arrays of re-simulated shells, one file per s
 `edited_shells.py`). These arrays are part of the data release. They are not built by this repository, which
 contains no finite-element code. `site_reweighting.py` needs none of them, only the stored B3 predictions.
 `count_matched.py`, `paired_layouts.py` and `site_reweighting.py` take their dense reference set from
-`splits/analysis/controlled_tests_dense.json` (`--dense-ids all` for the full B3 test set).
+`splits/analysis/controlled_tests_dense.json` (`--dense-ids all` for the full B3 test set). `label_range.py` reads
+the stored B3 test predictions, `splits/B3.json` and the `kappa` labels of the release, and scores the full B3 test set.
 
 **8. Tables of the paper**
 
 ```bash
 python benchmark/tables/rescore.py
+python benchmark/tables/native_rescore.py       # full-mesh finals on B1
+python benchmark/tables/ladder_native.py        # resolution ladder on B1, full-mesh finals on B2 and B3
+python benchmark/tables/native_secondary.py     # RMSE and relative L2 error of the full-mesh finals
 python benchmark/tables/main_table.py
 python benchmark/tables/full_tables.py
 ```
@@ -392,9 +405,11 @@ run end to end: the data preparation (step 1), the training of every field model
 references (step 7), `rescore.py` and the scorer (`score_ci`, `score_submission`). Its splits hold a few dozen shells,
 so it does not reproduce the numbers of the paper.
 
-Three parts need the full release, which is available to reviewers on request: the few-shot study and the site
+Four parts need the full release, which is available to reviewers on request: the few-shot study and the site
 references need more dense test shells than the sample holds, the intervention tests read the sweep tables of P1 to P4,
-and `main_table.py` and `full_tables.py` read the rescored predictions of every model.
+`label_range.py` needs the label of every B3 training shell, and `main_table.py` and `full_tables.py` read the
+rescored predictions of every model, the full-mesh rows of `main_table.py` from `native_rescore.py`,
+`ladder_native.py` and `native_secondary.py`.
 
 ## Community support
 

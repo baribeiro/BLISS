@@ -1,16 +1,16 @@
-"""Main benchmark table (Section 5, tab:main), v3 of 2026-09-25: five columns per protocol.
+"""Main benchmark table (Section 5, tab:main): five columns per protocol.
 
-    python benchmark/tables/main_table.py            -> paper_iclr/tables/main_results.tex
+    python benchmark/tables/main_table.py            -> <tables>/main_results.tex
 
-Every cell is copied from the printed full tables (paper_iclr/tables/full_B{1,2,3}.tex, themselves generated from
+Every cell is copied from the printed full tables (<tables>/full_B{1,2,3}.tex, themselves generated from
 outputs/rescore_v2.json and, for the SFNO 64x128 row, outputs/g64_scores_all.json), so the main table and the full
 tables cannot disagree. Columns per protocol: median relative kappa error [%], buckling R^2, RMSE of the field after
 removing the uniform shrink [mm], mean relative L2 error after removing the shrink [%], clear-site accuracy [%].
 The depth rules have no row in the full tables; their site accuracy is kept from the previous main table
-(rascunhos/results_v1/make_results_tables.py), whose file is read here before being overwritten.
+(an earlier script), whose file is read here before being overwritten.
 Bold: the best learned model per column among the 8,192-node rows (geometry models, SFNO 64x128, the MLPs and XGBoost).
 
-Full-mesh block (2026-09-25): the native track, trained on all 76,805 nodes and scored on the same 8,192 nodes, mean over
+Full-mesh block: the native track, trained on all 76,805 nodes and scored on the same 8,192 nodes, mean over
 the seeds present. kappa, buckling R^2 and clear-site accuracy come from outputs/native_rescore_v2.json (B1, written by
 native_rescore.py) and outputs/ladder_native_v2.json["native"] (B2/B3, ladder_native.py); RMSE and rel. L2 after
 removing the shrink from outputs/native_secondary_v2.json (native_secondary.py, rescore_v2.secondary()). A row appears

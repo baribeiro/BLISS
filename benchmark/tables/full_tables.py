@@ -9,7 +9,7 @@ Sources (read only):
   outputs/oracle_B1_topk_c1_xgboost_kn_final.json, outputs/xgb_b1frozen_v2.json   xgboost (B1 config frozen on B2/B3)
   outputs/set_{flat,deepsets,pairwise}_B{1,2,3}_residual_f2ne_kn_final.json      set models (tuned per split)
   outputs/increment_reference_v2.json     solver k-1 / k+1 rows
-Outputs (paper_iclr/rascunhos/fullresults_v1/):
+Outputs (the folder OUT below):
   full_B1.tex, full_B2.tex, full_B3.tex   per split, ONE landscape table (sidewaystable) with grouped columns: kappa
                                           (median rel. error, R^2, unconservative rate) | field (buckling R^2, field R^2,
                                           dimple R^2, RMSE full and without shrink, rel. L2 full and without shrink) |
