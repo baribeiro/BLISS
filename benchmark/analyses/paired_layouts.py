@@ -3,7 +3,7 @@
     python benchmark/analyses/paired_layouts.py [--compact cut_dense] [--clustered layout_10deg] [--wide layout_25deg]
                                   [--families figconv,mgn,transformer,transolver,deeponet] [--seeds 0,1,2]
                                   [--in-dir outputs] [--n-boot 2000]
-                                  [--dense-ids splits/analysis/controlled_tests_dense.json | all] [--exclude-sets SETS]
+                                  [--dense-ids all | FILE] [--exclude-sets SETS]
 
 The count-matched shells of count_matched.py hold their defects in one compact patch, so their footprint on the shell
 differs from that of a sparse shell. Three sets with the same source shell, the same number of defects, the same depths
@@ -23,12 +23,10 @@ INPUTS
                                                      set only the shells paired to the wide set are scored, whichever
                                                      shells the prediction file holds.
   <runs>/final_runs/<fam>_B3_n8192/*_{val,test}_pred.npz    published predictions of the same models, as count_matched.py
-  --dense-ids                                        json list of the ids of the dense reference set, as
-                                                     count_matched.py. Default splits/analysis/controlled_tests_dense.json,
-                                                     read relative to BLISS_ROOT: the B3 test shells outside the
-                                                     1,000-shell few-shot adaptation pool, without the 31 shells that
-                                                     are also sources of the neighbour probe (1,169 shells). "all" = the
-                                                     full B3 test set of splits/B3.json.
+  --dense-ids                                        the dense reference set, as count_matched.py. Default "all", the
+                                                     full B3 test set of splits/B3.json. A json list of ids selects
+                                                     another set, such as splits/analysis/controlled_tests_dense.json,
+                                                     read relative to BLISS_ROOT.
   --exclude-sets                                     optional: sets of edited shells whose sources are also left out.
                                                      Empty by default, no file is read.
   <in-dir>/count_matched.json                        optional: E_cs of every count-matched shell, copied for reference
@@ -204,7 +202,7 @@ def main():
     ap.add_argument("--families", default=",".join(ES.FAMILIES)); ap.add_argument("--seeds", default="0,1,2")
     ap.add_argument("--in-dir", default=ES.H, help="directory of the edited_pred files")
     ap.add_argument("--runs", default=ES.RUNS, help="directory of the trained models (holds final_runs/)")
-    ap.add_argument("--dense-ids", default=ES.DENSE_IDS, help='json list of the ids of the dense reference set, or "all" for the full B3 test set of splits/B3.json')
+    ap.add_argument("--dense-ids", default="all", help='"all" for the full B3 test set of splits/B3.json, or a json list of the ids of the dense reference set')
     ap.add_argument("--exclude-sets", default="", help="optional: sets of edited shells whose sources are also left out of the dense reference set")
     ap.add_argument("--edited-dir", default=ES.EDITED); ap.add_argument("--n-boot", type=int, default=2000)
     ap.add_argument("--out-dir", default=ES.H)

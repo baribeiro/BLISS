@@ -42,12 +42,11 @@ SCORES PER SHELL (stored with the prediction):
 
 REFERENCE ERRORS of a B3 model (published predictions of transfer.py, <runs>/final_runs/<fam>_B3_n8192/
 <TAG>_{val,test}_pred.npz): e_sp = relative kappa error (percent) per shell of the B3 validation set (sparse shells),
-e_de = the same on the dense reference set. Its default is the id list splits/analysis/controlled_tests_dense.json,
-read relative to BLISS_ROOT: the B3 test shells outside the 1,000-shell few-shot adaptation pool, without the 31 shells
-that are also sources of the neighbour probe (1,169 shells). The scoring scripts take --dense-ids with another json
-list of ids, or the word "all" for the full B3 test set of splits/B3.json. --exclude-sets is optional: it names sets
-of edited shells whose source shells are also left out, and is empty by default because the default list already leaves
-them out.
+e_de = the same on the dense reference set. Its default is the full B3 test set of splits/B3.json
+(--dense-ids all). The scoring scripts also take --dense-ids with a json list of ids, such as
+splits/analysis/controlled_tests_dense.json, read relative to BLISS_ROOT: the B3 test shells outside the few-shot
+adaptation pool and outside the sources of the neighbour probe. --exclude-sets is optional: it names sets
+of edited shells whose source shells are also left out, and is empty by default.
 
 THREADS. OMP_NUM_THREADS, MKL_NUM_THREADS and OPENBLAS_NUM_THREADS are set when this module is loaded, before numpy
 is imported, to SLURM_CPUS_PER_TASK if it is defined and to 4 otherwise; values already in the environment are kept.
@@ -100,7 +99,7 @@ sys.path.insert(0, B); sys.path.insert(0, B + "/benchmark/analyses")
 from bliss.metrics import _r2, loc_error_deg   # noqa: E402
 
 EDITED = H + "/edited_shells"
-DENSE_IDS = B + "/splits/analysis/controlled_tests_dense.json"      # dense reference set of the controlled tests
+DENSE_IDS = B + "/splits/analysis/controlled_tests_dense.json"      # an alternative dense reference set (--dense-ids)
 B3_SPLIT = B + "/splits/B3.json"                                    # --dense-ids all: its "test" list
 FAMILIES = ["figconv", "mgn", "transformer", "transolver", "deeponet"]      # the node models; this order fixes the bootstrap stream
 SITE_DEG = 10.0
@@ -291,7 +290,7 @@ def published_predictions(fam, runs=RUNS):
     return out
 
 
-def dense_test_ids(dense_ids=DENSE_IDS, exclude_sets="", edited_dir=EDITED):
+def dense_test_ids(dense_ids="all", exclude_sets="", edited_dir=EDITED):
     """Ids of the dense reference set, minus the sources of the excluded sets if any are named.
 
     Parameters

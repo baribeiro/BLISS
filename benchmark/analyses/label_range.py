@@ -52,7 +52,7 @@ range_counts
     Number of shells below, inside and above a range of kappa.
 range_errors
     Median kappa error on all shells and on the shells inside a range of true kappa.
-test_predictions
+prediction_files
     Test prediction files of the B3 finals of one family, per seed.
 family_errors
     The two median errors of one family, per seed and as the mean over seeds.
@@ -133,7 +133,7 @@ def range_errors(pred, true, lo, hi, label=None):
                 in_range=float(np.median(e[k])) if k.any() else None)
 
 
-def test_predictions(fam, runs=RUNS):
+def prediction_files(fam, runs=RUNS):
     """Test prediction files of the B3 finals of one family, per seed.
 
     Parameters
@@ -191,7 +191,7 @@ def family_errors(preds, ids, kappa, lo, hi, truth=None):
 def main():
     """Score the label-range control and write label_range.json."""
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--families", default=",".join(FAMILIES))
+    ap.add_argument("--families", default=",".join(FAMILIES), help="model families, separated by commas")
     ap.add_argument("--runs", default=RUNS, help="directory of the trained models (holds final_runs/)")
     ap.add_argument("--split", default=SPLIT, help="json of the B3 protocol, with the lists train and test")
     ap.add_argument("--release", default=SM.RELEASE, help="release directory with the solver labels")
@@ -212,7 +212,7 @@ def main():
     print("test shells: %d of %d with a label; %d below the range, %d inside, %d above" % (len(ids), len(test), cnt["below"], cnt["inside"], cnt["above"]))
     out = dict(labels=src, truth=a.truth, train=dict(n=len(train), min=lo, max=hi, mean=float(np.mean(ktr))), n_test=len(test), n_scored=len(ids), counts=cnt, families={})
     for fam in a.families.split(","):
-        files = test_predictions(fam, a.runs); preds, truth = {}, {}
+        files = prediction_files(fam, a.runs); preds, truth = {}, {}
         for s, x in files.items():
             z = np.load(x); col = lambda k: {int(i): float(v) for i, v in zip(z["ids"], np.asarray(z[k]).ravel())}
             preds[s] = col("pred_K"); truth[s] = col("true_K") if a.truth == "file" else kappa

@@ -52,11 +52,11 @@ def test_family_errors():
     assert r2["n_in_range"] == r["n_in_range"] and r2["all"] > 40
 
 
-def test_test_predictions(tmp_path):
+def test_prediction_files(tmp_path):
     """One file per seed is found in the folder of the B3 finals; a file without the seed tag is seed 0."""
     d = tmp_path / "final_runs" / "fam_B3_n8192"; d.mkdir(parents=True)
     for name in ("run_test_pred.npz", "run_s2_test_pred.npz", "run_s1_test_pred.npz", "run_val_pred.npz"):
         np.savez(d / name, ids=np.arange(3), pred_K=np.ones(3), true_K=np.ones(3))
-    files = LR.test_predictions("fam", str(tmp_path))
+    files = LR.prediction_files("fam", str(tmp_path))
     assert list(files) == [0, 1, 2] and files[2].endswith("run_s2_test_pred.npz") and files[0].endswith("run_test_pred.npz")
-    assert LR.test_predictions("other", str(tmp_path)) == {}
+    assert LR.prediction_files("other", str(tmp_path)) == {}

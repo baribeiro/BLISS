@@ -348,8 +348,7 @@ The controlled tests read prepared arrays of re-simulated shells, one file per s
 `nb_dense_single.npz`, `nb_dense_nb.npz`, `nb_sparse_full.npz` and `nb_sparse_single.npz` (keys in the docstring of
 `edited_shells.py`). These arrays are part of the data release. They are not built by this repository, which
 contains no finite-element code. `site_reweighting.py` needs none of them, only the stored B3 predictions.
-`count_matched.py`, `paired_layouts.py` and `site_reweighting.py` take their dense reference set from
-`splits/analysis/controlled_tests_dense.json` (`--dense-ids all` for the full B3 test set). `label_range.py` reads
+`count_matched.py`, `paired_layouts.py` and `site_reweighting.py` score against the full B3 test set by default (`--dense-ids` takes another list of ids, such as `splits/analysis/controlled_tests_dense.json`). `label_range.py` reads
 the stored B3 test predictions, `splits/B3.json` and the `kappa` labels of the release, and scores the full B3 test set.
 
 **8. Tables of the paper**

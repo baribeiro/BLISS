@@ -2,7 +2,7 @@
 
     python benchmark/analyses/count_matched.py [--set cut_dense] [--families figconv,mgn,transformer,transolver,deeponet]
                                   [--seeds 0,1,2] [--in-dir outputs] [--n-boot 2000]
-                                  [--dense-ids splits/analysis/controlled_tests_dense.json | all] [--exclude-sets SETS]
+                                  [--dense-ids all | FILE] [--exclude-sets SETS]
 
 B3 trains on sparse shells (11 to 18 defects, at least 25 deg apart) and tests on dense shells (69 to 81 defects, 10 deg
 apart), so two things change together: the number of defects and their spacing. The count-matched set removes the
@@ -14,12 +14,11 @@ INPUTS
                                                       (edited_shells.py; the prepared arrays of the edited shells
                                                       are its input, see the contract in its docstring)
   <runs>/final_runs/<fam>_B3_n8192/*_{val,test}_pred.npz   published predictions of the same models (transfer.py)
-  --dense-ids                                         json list of the ids of the dense reference set. Default
-                                                      splits/analysis/controlled_tests_dense.json, read relative to
-                                                      BLISS_ROOT: the B3 test shells outside the 1,000-shell few-shot
-                                                      adaptation pool, without the 31 shells that are also sources of
-                                                      the neighbour probe (1,169 shells). "all" = the full B3 test set
-                                                      of splits/B3.json.
+  --dense-ids                                         the dense reference set. Default "all", the full B3 test set
+                                                      of splits/B3.json. A json list of ids selects another set, such
+                                                      as splits/analysis/controlled_tests_dense.json (the B3 test
+                                                      shells outside the few-shot adaptation pool and outside the
+                                                      sources of the neighbour probe), read relative to BLISS_ROOT.
   <edited-dir>/<set>.npz of --exclude-sets            optional: the source shells of these sets are also left out of
                                                       the dense reference set. Empty by default, no file is read.
 
@@ -92,7 +91,7 @@ def main():
     ap.add_argument("--families", default=",".join(ES.FAMILIES)); ap.add_argument("--seeds", default="0,1,2")
     ap.add_argument("--in-dir", default=ES.H, help="directory of the edited_pred files")
     ap.add_argument("--runs", default=ES.RUNS, help="directory of the trained models (holds final_runs/)")
-    ap.add_argument("--dense-ids", default=ES.DENSE_IDS, help='json list of the ids of the dense reference set, or "all" for the full B3 test set of splits/B3.json')
+    ap.add_argument("--dense-ids", default="all", help='"all" for the full B3 test set of splits/B3.json, or a json list of the ids of the dense reference set')
     ap.add_argument("--exclude-sets", default="", help="optional: sets of edited shells whose sources are also left out of the dense reference set")
     ap.add_argument("--edited-dir", default=ES.EDITED); ap.add_argument("--n-boot", type=int, default=2000)
     ap.add_argument("--out-dir", default=ES.H)
