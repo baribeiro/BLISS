@@ -4408,6 +4408,6 @@
  "split_seed": 2027,
  "dataset_version": "BLISS-1.0",
  "split": "B2",
- "description": "amplitude extrapolation: train and validate below the 70th percentile of the deepest defect, test above it",
+ "description": "deeper defects: test on the shells whose deepest defect exceeds 2.35 t (about the deepest 28 % of the core), train and validate on the others",
  "n_shells": 4399
 }

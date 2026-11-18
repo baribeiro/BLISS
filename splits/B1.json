@@ -4408,6 +4408,6 @@
  "split_seed": 2027,
  "dataset_version": "BLISS-1.0",
  "split": "B1",
- "description": "in distribution, 75/10/15, stratified by regime and by quintile of the deepest defect",
+ "description": "within distribution: random split of the core shells, 75/10/15",
  "n_shells": 4399
 }
